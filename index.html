@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="{{metaDescription}}" />
+    <title>{{appTitle}}</title>
+    <link rel="stylesheet" href="/src/style.scss" />
+  </head>
+  <body>
+    {{> header}}
+    <main class="page" id="page">
+      <section class="hero">
+        <div class="container">
+          <h1 class="hero__title">{{appTitle}}</h1>
+          <p class="hero__lead">
+            Верстаем как статический сайт: контент в HTML, сборка/сервер — Vite, шаблоны — Handlebars (partials + context).
+          </p>
+          <div class="hero__actions">
+            <a class="btn" href="#sections">К секциям</a>
+            <a class="btn btn--ghost" href="#layout">Структура</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="sections">
+        <div class="container">
+          <h2 class="section__title">Секции</h2>
+          <div class="grid">
+            <article class="card">
+              <h3 class="card__title">Статика</h3>
+              <p class="card__text">Основной контент — прямо в <code>index.html</code> (и других страницах, если добавишь).</p>
+            </article>
+            <article class="card">
+              <h3 class="card__title">Handlebars</h3>
+              <p class="card__text">Partial’ы (<code>header</code>/<code>footer</code>) и данные (<code>appTitle</code>, <code>metaDescription</code>, <code>year</code>) — из <code>vite.config.ts</code>.</p>
+            </article>
+            <article class="card">
+              <h3 class="card__title">SCSS</h3>
+              <p class="card__text">Стили — в <code>src/style.scss</code>. Без CSS-in-JS.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="layout">
+        <div class="container">
+          <h2 class="section__title">Где менять что</h2>
+          <ul class="list">
+            <li><b>Контент страниц</b>: <code>index.html</code> (и любые новые <code>.html</code> файлы в корне).</li>
+            <li><b>Шапка/футер</b>: partials в <code>src/templates/partials</code>.</li>
+            <li><b>Данные для шаблонов</b>: <code>vite.config.ts</code> → <code>context</code>.</li>
+            <li><b>Стили</b>: <code>src/style.scss</code>.</li>
+          </ul>
+        </div>
+      </section>
+    </main>
+    {{> footer}}
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
