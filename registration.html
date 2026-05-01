@@ -9,14 +9,57 @@
     <link rel="stylesheet" href="/src/style.scss" />
   </head>
 <body>
-    <main class="container">
-        <div class="card">
-            <p>Регистрация</p>
-            <form>
-                <div class="form-body"></div>
+    <main class="container-modal">
+        <div class="card big">
+            <p class="card-title">Регистрация</p>
+            <form class="form">
+                <div class="form-body">
+                    {{> input
+                        id="email"
+                        name="email"
+                        label="Почта"
+                        type="email"
+                    }}
+                    {{> input
+                        id="login"
+                        name="login"
+                        label="Логин"
+                        type="text"
+                    }}
+                    {{> input
+                        id="first_name"
+                        name="first_name"
+                        label="Имя"
+                        type="text"
+                    }}
+                    {{> input
+                        id="second_name"
+                        name="second_name"
+                        label="Фамилия"
+                        type="text"
+                    }}
+                    {{> input
+                        id="phone"
+                        name="phone"
+                        label="Телефон"
+                        type="tel"
+                    }}
+                    {{> input
+                        id="password"
+                        name="password"
+                        label="Пароль"
+                        type="password"
+                    }}
+                    {{> input
+                        id="password"
+                        name="password"
+                        label="Пароль (ещё раз)"
+                        type="password"
+                    }}
+                </div>
                 <div class="form-footer">
-                    <button type="submit">Зарегистрироваться</button>
-                    <a href="/registration" class="sing-up"></a>
+                    <button type="submit" class="btn">Зарегистрироваться</button>
+                    <a href="/registration" class="sing-in">Войти</a>
                 </div>
             </form>
         </div>
