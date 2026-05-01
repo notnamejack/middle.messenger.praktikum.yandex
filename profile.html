@@ -9,18 +9,67 @@
     <link rel="stylesheet" href="/src/style.scss" />
   </head>
 <body>
-    <main>
-        <section>
-            <div class="phote-profile"></div>
-            <form>
+    <main class="container-profile">
+        <div class="link-group">
+            <a class="back" href="/"></a>
+        </div>
+        <div class="setting">
+            <div class="phote-profile">
+                <div class="foto empty"></div>
+                <p class="name">Иван</p>
+            </div>
+            <form class="form">
                 <div class="form-body">
-
+                    {{> input-horizontal
+                        id="email"
+                        name="email"
+                        label="Почта"
+                        type="email"
+                        value="pochta@yandex.ru"
+                    }}
+                    {{> input-horizontal
+                        id="login"
+                        name="login"
+                        label="Логин"
+                        type="text"
+                        value="ivanivanov"
+                    }}
+                    {{> input-horizontal
+                        id="first_name"
+                        name="first_name"
+                        label="Имя"
+                        type="text"
+                        value="Иван"
+                    }}
+                    {{> input-horizontal
+                        id="second_name"
+                        name="second_name"
+                        label="Фамилия"
+                        type="text"
+                        value="Иванов"
+                    }}
+                    {{> input-horizontal
+                        id="display_name"
+                        name="display_name"
+                        label="Имя в чате"
+                        type="text"
+                        value="Иван"
+                    }}
+                    {{> input-horizontal
+                        id="phone"
+                        name="phone"
+                        label="Телефон"
+                        type="tel"
+                        value="+7 (909) 967 30 30"
+                    }}
                 </div>
                 <div class="form-footer">
-                    <a href="/login">Выйти</a>
+                    <a class="edit">Изменить данные</a>
+                    <a class="edit">Изменить пароль</a>
+                    <a class="out" href="/login">Выйти</a>
                 </div>
             </form>
-        </section>
+        </div>
     </main>
 </body>
 </html>
