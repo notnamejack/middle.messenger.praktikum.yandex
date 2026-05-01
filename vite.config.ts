@@ -21,5 +21,17 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        login: resolve(__dirname, 'login.html'),
+        registration: resolve(__dirname, 'registration.html'),
+        profile: resolve(__dirname, 'profile.html'),
+        notFound: resolve(__dirname, 'not-found.html'),
+        serverError: resolve(__dirname, 'server-error.html'),
+      },
+    },
+  },
 })
 
