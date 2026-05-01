@@ -1,0 +1,84 @@
+@use '../tokens' as *;
+
+// chat
+.page{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  .container-message{
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
+    .chats{
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      height: 100vh;
+      width: 344px;
+      border-right: 1px solid $border;
+      background-color: $grey;
+      .profile{
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        width: 100%;
+        padding: 21px 10px;
+        .link{
+          text-decoration: none;
+          font-size: 12px;
+          font-weight: 500;
+          color: $desc;
+        }
+      }
+      .find{
+        width: calc(100% - 20px);
+        padding: 0 0 14px;
+        margin: 0 10px;
+        border-bottom: 1px solid $border;
+        .find-chat{
+          margin: 0;
+          padding: 10px;
+          width: 100%;
+          border: none;
+          outline: none;
+          border-radius: 5px;
+          background-color: $bg-input;
+        }
+      }
+      .list{
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+        height: 100%;
+        .empty{
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: 100%;
+          width: 100%;
+          .desc{
+            font-size: 12px;
+            font-weight: 500;
+            color: $desc;
+          }
+        }
+      }
+    }
+    .chat{
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100vh;
+      .desc{
+        font-size: 12px;
+        font-weight: 500;
+        color: $desc;
+      }
+    }
+  }
+}
