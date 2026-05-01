@@ -37,16 +37,16 @@ npm i -D sass vite-plugin-handlebars
 ### Команды
 
 ```bash
-npm run start      # разработка, http://localhost:3000
+npm run start    # разработка, http://localhost:3000
 npm run build    # сборка в dist/
 npm run preview  # локальный просмотр dist/, тоже на 3000 (см. vite.config.ts)
 ```
 
 ### Макет Figma
 
-`https://www.figma.com/design/jF5fFFzgGOxQeB4CmKWTiE/Chat_external_link?node-id=1-537&t=GvDNWCAqe3GZ47HC-0`
+[`https://www.figma.com/design/jF5fFFzgGOxQeB4CmKWTiE/Chat_external_link?node-id=1-537&t=GvDNWCAqe3GZ47HC-0`](Макет Figma)
 
 
 ### Проект на Netlify
 
-`https://taupe-pixie-c23730.netlify.app/`
+[`https://taupe-pixie-c23730.netlify.app/`](Веб-приложение «Чат»)
