@@ -10,19 +10,25 @@
   </head>
   <body>
     <main class="page" id="page">
-      <section id="message">
-        <div>
-          <div>
-            <div class="profile">
-              <a href="/profile">Профиль</a>
+      <div class="container-message">
+        <div class="chats">
+          <div class="profile">
+            <a href="/profile" class="link">Профиль</a>
+          </div>
+          <div class="find">
+            <input class="find-chat" placeholder="Поиск"/>
+          </div>
+          <div class="list">
+            <div class="empty">
+              <p class="desc">У вас нет чатов</p>
             </div>
           </div>
-          <!-- message -->
-          <div>
-
-          </div>
         </div>
-      </section>
+        <!-- message -->
+        <div class="chat">
+          <p class="desc">Выберите чат чтобы отправить сообщение</p>
+        </div>
+      </div>
     </main>
     <script type="module" src="/src/main.ts"></script>
   </body>
