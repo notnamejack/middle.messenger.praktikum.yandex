@@ -44,9 +44,9 @@ npm run preview  # локальный просмотр dist/, тоже на 3000
 
 ### Макет Figma
 
-[`https://www.figma.com/design/jF5fFFzgGOxQeB4CmKWTiE/Chat_external_link?node-id=1-537&t=GvDNWCAqe3GZ47HC-0`](Макет Figma)
+[Макет Figma](https://www.figma.com/design/jF5fFFzgGOxQeB4CmKWTiE/Chat_external_link?node-id=1-537&t=GvDNWCAqe3GZ47HC-0)
 
 
 ### Проект на Netlify
 
-[`https://taupe-pixie-c23730.netlify.app/`](Веб-приложение «Чат»)
+[Веб-приложение «Чат»](https://taupe-pixie-c23730.netlify.app/)
