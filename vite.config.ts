@@ -13,7 +13,7 @@ export default defineConfig({
   },
   plugins: [
     handlebars({
-      partialDirectory: resolve(__dirname, 'src/templates/partials'),
+      partialDirectory: resolve(__dirname, 'src/components'),
       context: {
         appTitle: 'Chats Messenger',
         metaDescription: 'Статическая вёрстка на Vite + TypeScript + SCSS + Handlebars (partials + context).',
@@ -25,11 +25,11 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        login: resolve(__dirname, 'login.html'),
-        registration: resolve(__dirname, 'registration.html'),
-        profile: resolve(__dirname, 'profile.html'),
-        notFound: resolve(__dirname, 'not-found.html'),
-        serverError: resolve(__dirname, 'server-error.html'),
+        login: resolve(__dirname, 'src/pages/login.html'),
+        registration: resolve(__dirname, 'src/pages/registration.html'),
+        profile: resolve(__dirname, 'src/pages/profile.html'),
+        notFound: resolve(__dirname, 'src/pages/not-found.html'),
+        serverError: resolve(__dirname, 'src/pages/server-error.html'),
       },
     },
   },
