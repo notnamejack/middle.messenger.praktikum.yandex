@@ -19,42 +19,13 @@
             <input id="message" name="message" class="find-chat" placeholder="Поиск"/>
           </div>
           <ul class="list">
-            <!-- <li class="item empty">
-              <p class="desc">У вас нет чатов</p>
-            </li> -->
-            <li class="item">
-              <div class="avatar empty"></div>
-              <div class="message">
-                <p class="name">Андрей</p>
-                <p class="text-message">Изображение</p>
-              </div>
-              <div class="metrika">
-                <p class="time">10:49</p>
-                <p class="count">2</p>
-              </div>
-            </li>
-            <li class="item">
-              <div class="avatar empty"></div>
-              <div class="message">
-                <p class="name">Киноклуб</p>
-                <p class="text-message"><span>Вы: </span>стикер</p>
-              </div>
-              <div class="metrika">
-                <p class="time">10:49</p>
-                <!-- <p class="count">2</p> -->
-              </div>
-            </li>
-             <li class="item">
-              <div class="avatar empty"></div>
-              <div class="message">
-                <p class="name">Илья</p>
-                <p class="text-message">Друзья, у меня для вас особенный выпуск новостей!...</p>
-              </div>
-              <div class="metrika">
-                <p class="time">10:49</p>
-                <p class="count">4</p>
-              </div>
-            </li>
+            {{#each chats}}
+              {{> chat-item}}
+            {{else}}
+              <li class="item empty">
+                <p class="desc">У вас нет чатов</p>
+              </li>
+            {{/each}}
           </ul>
         </div>
         <!-- message -->

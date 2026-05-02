@@ -18,6 +18,11 @@ export default defineConfig({
         appTitle: 'Chats Messenger',
         metaDescription: 'Статическая вёрстка на Vite + TypeScript + SCSS + Handlebars (partials + context).',
         year: new Date().getFullYear(),
+        chats: [
+          { name: 'Андрей', text: 'Изображение', time: '10:49', count: 2 },
+          { name: 'Киноклуб', text: 'стикер', time: '10:49', prefix: 'Вы: ' },
+          { name: 'Илья', text: 'Друзья, у меня...', time: '10:49', count: 4 },
+        ]
       },
     }),
   ],
