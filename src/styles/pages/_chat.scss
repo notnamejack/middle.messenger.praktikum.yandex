@@ -1,0 +1,255 @@
+@use '../tokens' as *;
+
+// chat
+.page{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  .container-message{
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
+    .chats{
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      height: 100vh;
+      width: 444px;
+      border-right: 1px solid $border;
+      background-color: $grey;
+      .profile{
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        width: 100%;
+        padding: 21px 10px;
+        .link{
+          text-decoration: none;
+          font-size: 12px;
+          font-weight: 500;
+          color: $desc;
+        }
+      }
+      .find{
+        width: calc(100% - 20px);
+        padding: 0 0 14px;
+        margin: 0 10px;
+        border-bottom: 1px solid $border;
+        .find-chat{
+          margin: 0;
+          padding: 10px;
+          width: 100%;
+          border: none;
+          outline: none;
+          border-radius: 5px;
+          background-color: $bg-input;
+        }
+      }
+      .list{
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        width: 100%;
+        height: 100%;
+        list-style-type: none;
+        margin: 0;
+        padding: 0;        
+      }
+    }
+    .chat{
+      display: flex;
+      align-items: center;
+      width: calc(100% - 444px);
+      height: 100vh;
+      &.empty{
+        justify-content: center;
+        .desc{
+          font-size: 12px;
+          font-weight: 500;
+          color: $desc;
+        }
+      }
+      .chat-item{
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        height: 100%;
+        width: 100%;
+        .header{
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          width: calc(100% - 40px);
+          margin: 0 20px;
+          padding: 10px 0;
+          border-bottom: 1px solid $border;
+          .user{
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            .avatar{
+              width: 34px;
+              height: 34px;
+              border-radius: 100%;
+              background-color: $border;
+              &.empty{
+                  background-image: url(../../assets/unphoto.svg);
+                  background-position: center;
+                  background-repeat: no-repeat;
+                  background-size: 14px;
+              }
+            }
+            .name{
+              margin: 0;
+              padding: 0;
+              font-size: 13px;
+              font-weight: 600;
+              color: $text;
+            }
+          }
+          .setting{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            cursor: pointer;
+            span{
+              width: 3px;
+              height: 3px;
+              background-color: $text;
+              border-radius: 100%;
+            }
+          }
+        }
+        .body{
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: flex-end;
+          gap: 30px;
+          height: 100%;
+          width: calc(100% - 40px);
+          margin: 0 20px;
+          padding-bottom: 30px;
+          border-bottom: 1px solid $border;
+          overflow: hidden;
+          .datetime p{
+            margin: 0;
+            padding: 0;
+            font-size: 12px;
+            font-weight: 500;
+            color: $desc;
+          }
+          .message-list{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            .message{
+              padding: 10px;
+              border-radius: 16px;
+              display: flex;
+              flex-direction: column;
+              gap: 10px;
+              max-width: 400px;
+              min-width: 120px;
+              .text{
+                margin: 0;
+                padding: 0;
+                font-size: 12px;
+                font-weight: 500;
+                line-height: 15px;
+                color: $text;
+                white-space: pre-line;
+              }
+              .time{
+                margin: 0;
+                padding: 0;
+                margin-left: auto;
+                font-size: 9px;
+                font-weight: 500;
+                color: $desc;
+              }
+              &.user{
+                background-color: $bg-massage;
+                margin-right: auto;
+              }
+              &.my{
+                background-color: $active;
+                flex-direction: row;
+                align-items: flex-end;
+                margin-left: auto;
+                .time{
+                  color: $accent;
+                }
+              }
+              &.photo{
+                background-color: transparent;
+                border: 1px solid $border;
+                & img{
+                  width: 100%;
+                  object-fit: contain;
+                }
+                .time{
+                  padding: 2px 7px;
+                  color: $bg;
+                  width: 37px;
+                  background-color: $bg-time;
+                  border-radius: 16px;
+                  text-align: center;
+                }
+              }
+            }
+          }
+        }
+        .footer{
+          display: flex;
+          align-self: flex-start;
+          gap: 10px;
+          margin: 0 20px;
+          padding: 10px 0;
+          width: calc(100% - 40px);
+          .btn-file{
+            border: none;
+            background-color: transparent;
+            outline: none;
+            border: 16px;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            background-image: url(../../assets/file.svg);
+          }
+          .input-message{
+            border: none;
+            background-color: $bg-input;
+            border: 16px;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 10px 20px;
+            border-radius: 16px;
+            width: 100%;
+          }
+          .btn-send{
+            border: none;
+            background-color: transparent;
+            outline: none;
+            border: 16px;
+            width: 30px;
+            height: 28px;
+            cursor: pointer;
+            transform: rotate(180deg);
+            background-image: url(../../assets/arrow.svg);
+            background-position: center;
+            background-repeat: no-repeat;
+          }
+        }
+      }
+    }
+  }
+}
