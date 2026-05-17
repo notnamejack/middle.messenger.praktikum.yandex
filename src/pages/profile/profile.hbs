@@ -1,0 +1,62 @@
+<main class="container-profile">
+    <div class="link-group">
+        <a class="back" href="/"></a>
+    </div>
+    <div class="setting">
+        <div class="phote-profile">
+            <div class="foto empty"></div>
+            <p class="name">Иван</p>
+        </div>
+        <form class="form">
+            <div class="form-body">
+                {{{ InputHorizontal
+                    id="email"
+                    name="email"
+                    label="Почта"
+                    type="email"
+                    value="pochta@yandex.ru"
+                }}}
+                {{{ InputHorizontal
+                    id="login"
+                    name="login"
+                    label="Логин"
+                    type="text"
+                    value="ivanivanov"
+                }}}
+                {{{ InputHorizontal
+                    id="first_name"
+                    name="first_name"
+                    label="Имя"
+                    type="text"
+                    value="Иван"
+                }}}
+                {{{ InputHorizontal
+                    id="second_name"
+                    name="second_name"
+                    label="Фамилия"
+                    type="text"
+                    value="Иванов"
+                }}}
+                {{{ InputHorizontal
+                    id="display_name"
+                    name="display_name"
+                    label="Имя в чате"
+                    type="text"
+                    value="Иван"
+                }}}
+                {{{ InputHorizontal
+                    id="phone"
+                    name="phone"
+                    label="Телефон"
+                    type="tel"
+                    value="+7 (909) 967 30 30"
+                }}}
+            </div>
+            <div class="form-footer">
+                <a class="edit">Изменить данные</a>
+                <a class="edit">Изменить пароль</a>
+                <a class="out" href="/login">Выйти</a>
+            </div>
+        </form>
+    </div>
+</main>
