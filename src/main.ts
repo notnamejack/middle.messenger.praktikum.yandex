@@ -2,11 +2,11 @@ import { renderPage, navigate } from './app';
 import Input from './components/input';
 import InputHorizontal from './components/input-horizontal';
 import ChatItem from './components/chat-item';
-import { registerComponent } from './core/register-component';
+import { registerComponent, type ComponentConstructor } from './core/register-component';
 
-registerComponent(Input);
-registerComponent(InputHorizontal);
-registerComponent(ChatItem);
+registerComponent(Input as ComponentConstructor);
+registerComponent(InputHorizontal as ComponentConstructor);
+registerComponent(ChatItem as ComponentConstructor);
 
 renderPage(); 
 

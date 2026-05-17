@@ -9,10 +9,22 @@
   "scripts": {
     "start": "vite --open",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint src vite.config.ts && stylelint \"src/**/*.scss\" && tsc --noEmit",
+    "lint:fix": "eslint src vite.config.ts --fix && stylelint \"src/**/*.scss\" --fix",
+    "lint:eslint": "eslint src vite.config.ts",
+    "lint:style": "stylelint \"src/**/*.scss\"",
+    "lint:types": "tsc --noEmit"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.0",
+    "postcss-scss": "^4.0.9",
     "sass": "^1.99.0",
+    "stylelint": "^17.11.1",
+    "stylelint-config-standard-scss": "^17.0.0",
+    "stylelint-scss": "^7.1.1",
     "typescript": "~6.0.2",
     "vite": "^8.0.10",
     "vite-plugin-handlebars": "^2.0.3"

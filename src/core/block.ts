@@ -59,18 +59,20 @@ export default abstract class Block<Props extends BlockOwnProps = BlockOwnProps>
 
   private attachListeners() {
     for (const eventName in this.events) {
-      const eventCallback = this.events[eventName];
+      const key = eventName as keyof HTMLElementEventMap;
+      const eventCallback = this.events[key];
       if (typeof eventCallback == 'function' && this.domElement) {
-        this.domElement.addEventListener(eventName, eventCallback);
+        this.domElement.addEventListener(key, eventCallback);
       }
     }
   }
 
   private removeListeners() {
     for (const eventName in this.events) {
-      const eventCallback = this.events[eventName];
+      const key = eventName as keyof HTMLElementEventMap;
+      const eventCallback = this.events[key];
       if (typeof eventCallback === 'function' && this.domElement) {
-        this.domElement.removeEventListener(eventName, eventCallback);
+        this.domElement.removeEventListener(key, eventCallback);
       }
     }
   }

@@ -1,16 +1,21 @@
 import Handlebars from 'handlebars';
 import type { HelperOptions } from 'handlebars';
-
+import type Block from './block';
 
 let uniqueId = 0;
 
-function registerComponent(Component: any) {
+export type ComponentConstructor = {
+  componentName: string;
+  new (props?: Record<string, unknown>): Block;
+};
+
+function registerComponent(Component: ComponentConstructor) {
   const dataAttribute = `data-component-hbs-id="${++uniqueId}"`;
   
   Handlebars.registerHelper(
     Component.componentName,
     function (this: unknown, { hash, data }: HelperOptions) {
-      const component = new Component(hash);
+      const component = new Component(hash as Record<string, unknown>);
       
       if ('ref' in hash) {
         (data.root.__refs = data.root.__refs || {})[hash.ref] = component.element();
