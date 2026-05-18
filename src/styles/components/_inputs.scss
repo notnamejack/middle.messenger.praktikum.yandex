@@ -18,9 +18,11 @@
     border-bottom: 1px solid $accent;
     font-size: 13px;
     font-weight: 500;
+
     &.is-invalid {
       border-bottom-color: #ff2f2f;
     }
+
     &:focus {
       outline: none;
     }
