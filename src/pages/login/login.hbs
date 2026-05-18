@@ -1,0 +1,26 @@
+<main class="container-modal">
+    <div class="card">
+        <p class="card-title">Вход</p>
+        <form action="/" class="form">
+            <div class="form-body">
+                {{{ Input
+                    id="login"
+                    name="login"
+                    label="Логин"
+                    type="text"
+                }}}
+                
+                {{{ Input
+                    id="password"
+                    name="password"
+                    label="Пароль"
+                    type="password"
+                }}}
+            </div>
+            <div class="form-footer">
+                <button type="submit" class="btn">Авторизоваться</button>
+                <a href="/registration" class="sing-up" data-link>Нет аккаунта?</a>
+            </div>
+        </form>
+    </div>
+</main>

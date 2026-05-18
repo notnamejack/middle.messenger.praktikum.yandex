@@ -1,0 +1,11 @@
+@use '../tokens' as *;
+
+.btn{
+    width: 100%;
+    background-color: $accent;
+    border: none;
+    outline: none;
+    padding: 12px 70px;
+    color: $bg;
+    border-radius: 8px;
+}
