@@ -2,17 +2,17 @@
     <div class="container-message">
     <div class="chats">
         <div class="profile">
-        <a href="/profile" class="link" data-link>Профиль</a>
+            <a href="/profile" class="link" data-link>Профиль</a>
         </div>
         <div class="find">
-        <input id="message" name="message" class="find-chat" placeholder="Поиск"/>
+            <input id="message" name="message" class="find-chat" placeholder="Поиск"/>
         </div>
         <ul class="list">
         {{#each chats}}
-            {{> ChatItem}}
+            {{{ ChatItem name=name text=text time=time count=count prefix=prefix }}}
         {{else}}
             <li class="item empty">
-            <p class="desc">У вас нет чатов</p>
+                <p class="desc">У вас нет чатов</p>
             </li>
         {{/each}}
         </ul>
@@ -22,10 +22,10 @@
         <!-- <p class="desc">Выберите чат чтобы отправить сообщение</p> -->
         <div class="chat-item">
             <div class="header">
-            <div class="user">
-                <div class="avatar empty"></div>
-                <p class="name">Андрей</p>
-            </div>
+                <div class="user">
+                    <div class="avatar empty"></div>
+                    <p class="name">Андрей</p>
+                </div>
             <div class="setting">
                 <span></span>
                 <span></span>
@@ -33,32 +33,32 @@
             </div>
             </div>
             <div class="body">
-            <div class="datetime">
-                <p>19 июня</p>
-            </div>
-            <div class="message-list">
-                <div class="message user">
-                <p class="text">
-                    Привет! Смотри, тут всплыл интересный кусок лунной космической истории — НАСА в какой-то момент попросила Хассельблад адаптировать модель SWC для полетов на Луну. Сейчас мы все знаем что астронавты летали с моделью 500 EL — и к слову говоря, все тушки этих камер все еще находятся на поверхности Луны, так как астронавты с собой забрали только кассеты с пленкой.
+                <div class="datetime">
+                    <p>19 июня</p>
+                </div>
+                <div class="message-list">
+                    <div class="message user">
+                    <p class="text">
+                        Привет! Смотри, тут всплыл интересный кусок лунной космической истории — НАСА в какой-то момент попросила Хассельблад адаптировать модель SWC для полетов на Луну. Сейчас мы все знаем что астронавты летали с моделью 500 EL — и к слову говоря, все тушки этих камер все еще находятся на поверхности Луны, так как астронавты с собой забрали только кассеты с пленкой.
 
-Хассельблад в итоге адаптировал SWC для космоса, но что-то пошло не так и на ракету они так никогда и не попали. Всего их было произведено 25 штук, одну из них недавно продали на аукционе за 45000 евро.
-                </p>
-                <p class="time">11:56</p>
+    Хассельблад в итоге адаптировал SWC для космоса, но что-то пошло не так и на ракету они так никогда и не попали. Всего их было произведено 25 штук, одну из них недавно продали на аукционе за 45000 евро.
+                    </p>
+                    <p class="time">11:56</p>
+                    </div>
+                    <div class="message user photo">
+                        <img src="/assets/image.png" alt="foto">
+                        <p class="time">11:56</p>
+                    </div>
+                    <div class="message my">
+                        <p class="text">Круто!</p>
+                        <p class="time">12:00</p>
+                    </div>
                 </div>
-                <div class="message user photo">
-                <img src="src/assets/image.png" alt="foto">
-                <p class="time">11:56</p>
-                </div>
-                <div class="message my">
-                <p class="text">Круто!</p>
-                <p class="time">12:00</p>
-                </div>
-            </div>
             </div>
             <div class="footer">
-            <button class="btn-file"></button>
-            <input type="text" class="input-message" placeholder="Сообщение" id="message"/>
-            <button class="btn-send"></button>
+                <button class="btn-file"></button>
+                <input type="text" class="input-message" placeholder="Сообщение" id="message" name="message"/>
+                <button class="btn-send"></button>
             </div>
         </div>
     </div>
