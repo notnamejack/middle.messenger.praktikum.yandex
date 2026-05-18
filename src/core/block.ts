@@ -39,6 +39,12 @@ export default abstract class Block<Props extends BlockOwnProps = BlockOwnProps>
     this.render();
   }
 
+  public destroy() {
+    this.unmountComponent();
+    this.domElement?.remove();
+    this.domElement = null;
+  }
+
   protected componentDidMount() {}
 
   private mountComponent() {

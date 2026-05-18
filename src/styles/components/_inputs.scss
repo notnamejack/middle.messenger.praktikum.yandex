@@ -18,5 +18,18 @@
     border-bottom: 1px solid $accent;
     font-size: 13px;
     font-weight: 500;
+    &.is-invalid {
+      border-bottom-color: #ff2f2f;
+    }
+    &:focus {
+      outline: none;
+    }
+  }
+
+  .field-error {
+    display: block;
+    max-height: 12px;
+    font-size: 8px;
+    color: #ff2f2f;
   }
 }

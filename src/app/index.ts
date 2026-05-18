@@ -11,6 +11,9 @@ export function renderPage(pathname: string = window.location.pathname) {
   const Page = ROUTES[pathname] ?? NotFoundPage;
 
   root.innerHTML = '';
+  if(activePage) {
+    activePage.destroy();
+  }
   activePage = new Page();
   const el = activePage.element();
   if (el) root.appendChild(el);
