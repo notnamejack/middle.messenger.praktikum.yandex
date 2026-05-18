@@ -3,6 +3,7 @@ import { defineConfig } from 'vite'
 import handlebars from 'vite-plugin-handlebars'
 
 export default defineConfig({
+  appType: 'spa',
   server: {
     port: 3000,
     strictPort: true,
@@ -30,11 +31,6 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        login: resolve(__dirname, 'src/pages/login.html'),
-        registration: resolve(__dirname, 'src/pages/registration.html'),
-        profile: resolve(__dirname, 'src/pages/profile.html'),
-        notFound: resolve(__dirname, 'src/pages/not-found.html'),
-        serverError: resolve(__dirname, 'src/pages/server-error.html'),
       },
     },
   },
