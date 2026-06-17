@@ -9,13 +9,16 @@ import ServerErrorPage from '../pages/server-error';
 type PageConstructor = new () => Block;
 
 export const ROUTES: Record<string, PageConstructor> = {
-  '/': ChatsPage,
-  '/messenger': ChatsPage,
-  '/login': LoginPage,
+  '/': LoginPage,
   '/sign-up': RegistrationPage,
-  '/registration': RegistrationPage,
-  '/profile': ProfilePage,
   '/settings': ProfilePage,
+  '/messenger': ChatsPage,
   '/404': NotFoundPage,
   '/500': ServerErrorPage,
 };
+
+export const PUBLIC_ROUTES = ['/', '/sign-up', '/404', '/500'];
+export const PRIVATE_ROUTES = ['/messenger', '/settings'];
+
+export const isPublicRoute = (path: string) => PUBLIC_ROUTES.includes(path);
+export const isPrivateRoute = (path: string) => PRIVATE_ROUTES.includes(path);

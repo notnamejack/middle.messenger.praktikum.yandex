@@ -1,5 +1,8 @@
+import { AuthAPI } from '../../api/auth';
 import { navigate } from '../../app';
 import Block from '../../core/block';
+import type { SignInRequest } from '../../types/api';
+import { getApiErrorReason } from '../../utils/api-error';
 import { getFormValues, validateField, validateForm } from '../../utils/validation';
 import template from './login.hbs?raw';
 
@@ -14,7 +17,7 @@ export default class LoginPage extends Block {
       }
     },
 
-    submit: (event: Event) => {
+    submit: async (event: Event) => {
       event.preventDefault();
 
       const target = event.target;
@@ -23,10 +26,15 @@ export default class LoginPage extends Block {
       const isValid = validateForm(target);
       if(!isValid) return;
 
-      const payload = getFormValues(target);
-      console.log(payload);
+      const { login, password } = getFormValues(target);
 
-      navigate('/');
+      try {
+        await AuthAPI.signIn({ login, password } satisfies SignInRequest);
+        navigate('/messenger');
+      } catch (error) {
+        const message = getApiErrorReason(error);
+        console.error(message);
+      }
     }
   }
 }

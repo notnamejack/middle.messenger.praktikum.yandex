@@ -8,10 +8,10 @@ registerComponent(Input as ComponentConstructor);
 registerComponent(InputHorizontal as ComponentConstructor);
 registerComponent(ChatItem as ComponentConstructor);
 
-renderPage(); 
+void renderPage().catch(console.error);
 
 window.addEventListener('popstate', () => {
-  renderPage();
+  void renderPage().catch(console.error);
 });
 
 document.addEventListener('click', (e) => {
