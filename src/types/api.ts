@@ -83,4 +83,9 @@ export type ChatResponse = {
   updated_by: number | null;
 };
 
+/** POST /chats */
+export type CreateChatResponse = {
+  id: number;
+};
+
 export type ChatsResponse = ChatResponse[];

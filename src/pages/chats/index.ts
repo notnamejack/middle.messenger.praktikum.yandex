@@ -1,22 +1,316 @@
-import Block, { type BlockOwnProps} from '../../core/block';
+import { AuthAPI } from '../../api/auth';
+import { ChatsAPI } from '../../api/chats';
+import { UserAPI } from '../../api/user';
+import Block, { type BlockOwnProps } from '../../core/block';
+import type { ChatResponse, UserResponse } from '../../types/api';
+import { getAvatarUrl } from '../../utils/avatar';
+import { getApiErrorReason } from '../../utils/api-error';
 import template from './chats.hbs?raw';
 
+// sprint 4: мок для вёрстки
+// const CHATS = [
+//   { name: 'Андрей', text: 'Изображение', time: '10:49', count: 2 },
+//   { name: 'Киноклуб', text: 'стикер', time: '10:49', prefix: 'Вы: ' },
+//   { name: 'Илья', text: 'Друзья, у меня...', time: '10:49', count: 4 },
+// ];
 
-const CHATS = [
-  { name: 'Андрей', text: 'Изображение', time: '10:49', count: 2 },
-  { name: 'Киноклуб', text: 'стикер', time: '10:49', prefix: 'Вы: ' },
-  { name: 'Илья', text: 'Друзья, у меня...', time: '10:49', count: 4 },
-]
+type ChatListItem = {
+  id: number;
+  name: string;
+  text: string;
+  time: string;
+  count?: number;
+  prefix?: string;
+  active?: boolean;
+};
+
+type SearchNewChatItem = {
+  isNewChat: true;
+  title: string;
+};
+
+type SearchChatItem = ChatListItem & {
+  isChat: true;
+};
+
+type SearchUserItem = {
+  isUser: true;
+  id: number;
+  name: string;
+  login: string;
+  avatarUrl: string | null;
+};
+
+type SearchResultItem = SearchNewChatItem | SearchChatItem | SearchUserItem;
 
 type ChatsPageProps = BlockOwnProps & {
-  chats: typeof CHATS;
+  chats: ChatListItem[];
+  searchQuery: string;
+  isSearching: boolean;
+  searchResults: SearchResultItem[];
+  activeChatId: number | null;
+  activeChatTitle: string;
+};
+
+function formatTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString('ru-RU', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
 
-export default class ChantsPage extends Block<ChatsPageProps> {
+function mapChat(chat: ChatResponse, currentUserId: number): ChatListItem {
+  const last = chat.last_message;
+  const isMine = last?.user.id === currentUserId;
+
+  return {
+    id: chat.id,
+    name: chat.title,
+    text: last?.content ?? '',
+    time: last ? formatTime(last.time) : '',
+    count: chat.unread_count > 0 ? chat.unread_count : undefined,
+    prefix: isMine ? 'Вы: ' : undefined,
+  };
+}
+
+function getUserDisplayName(user: UserResponse): string {
+  return user.display_name || `${user.first_name} ${user.second_name}`;
+}
+
+export default class ChatsPage extends Block<ChatsPageProps> {
+  private currentUserId = 0;
+
+  private allChats: ChatListItem[] = [];
+
+  private searchTimer: ReturnType<typeof setTimeout> | null = null;
+
+  private searchInputValue = '';
+
+  private searchCursorPos: number | null = null;
+
   constructor() {
-    super({ chats: CHATS});
+    super({
+      chats: [],
+      searchQuery: '',
+      isSearching: false,
+      searchResults: [],
+      activeChatId: null,
+      activeChatTitle: '',
+    });
   }
 
-
   protected template = template;
+
+  protected componentDidMount() {
+    void this.loadChats();
+  }
+
+  private withActiveChats(chats: ChatListItem[]): ChatListItem[] {
+    const { activeChatId } = this.props;
+    return chats.map((chat) => ({
+      ...chat,
+      active: chat.id === activeChatId,
+    }));
+  }
+
+  private syncSearchInput(query: string) {
+    const input = this.refs.search;
+    if (!(input instanceof HTMLInputElement)) return;
+  
+    input.value = query;
+  
+    if (!this.props.isSearching) return;
+  
+    input.focus();
+    const pos = this.searchCursorPos ?? query.length;
+    input.setSelectionRange(pos, pos);
+  }
+
+  private async loadChats() {
+    try {
+      const user = await AuthAPI.getUser();
+      this.currentUserId = user.id;
+
+      const chats = await ChatsAPI.getChats();
+      this.allChats = chats.map((chat) => mapChat(chat, user.id));
+
+      const searchValue = this.searchInputValue;
+      this.setProps({
+        chats: this.withActiveChats(this.allChats),
+      });
+      if (searchValue.trim()) {
+        await this.updateSearch(searchValue);
+      }
+    } catch (error) {
+      alert(getApiErrorReason(error));
+    }
+  }
+
+  private async updateSearch(query: string) {
+    const trimmed = query.trim();
+
+    if (!trimmed) {
+      this.clearSearch();
+      return;
+    }
+
+    const filteredChats = this.allChats.filter((chat) =>
+      chat.name.toLowerCase().includes(trimmed.toLowerCase()),
+    );
+
+    let users: UserResponse[] = [];
+
+    try {
+      users = (await UserAPI.search(trimmed)).filter(
+        (user) => user.id !== this.currentUserId,
+      );
+    } catch {
+      users = [];
+    }
+
+    const newChatItem: SearchResultItem[] =
+      filteredChats.length === 0
+        ? [{ isNewChat: true, title: trimmed }]
+        : [];
+
+    const searchResults: SearchResultItem[] = [
+      ...newChatItem,
+      ...filteredChats.map((chat) => ({
+        isChat: true as const,
+        ...chat,
+        active: chat.id === this.props.activeChatId,
+      })),
+      ...users.map((user) => ({
+        isUser: true as const,
+        id: user.id,
+        name: getUserDisplayName(user),
+        login: user.login,
+        avatarUrl: getAvatarUrl(user.avatar),
+      })),
+    ];
+
+    this.setProps({
+      searchQuery: query,
+      isSearching: true,
+      searchResults,
+    });
+    this.syncSearchInput(query);
+  }
+
+  private clearSearch() {
+    const input = this.refs.search;
+    if (input instanceof HTMLInputElement) {
+      input.value = '';
+    }
+
+    this.setProps({
+      searchQuery: '',
+      isSearching: false,
+      searchResults: [],
+      chats: this.withActiveChats(this.allChats),
+    });
+  }
+
+  private openChat(id: number, title: string) {
+    this.setProps({
+      activeChatId: id,
+      activeChatTitle: title,
+      chats: this.withActiveChats(this.allChats),
+    });
+    this.clearSearch();
+
+    // sprint 4: WebSocket + лента сообщений
+  }
+
+  private async handleCreateChat(title: string) {
+    const response = await ChatsAPI.createChat(title);
+    await this.loadChats();
+    this.openChat(response.id, title);
+  }
+
+  private async handleCreateChatWithUser(userId: number, name: string, login: string) {
+    try {
+      const commonChat = await ChatsAPI.getCommonChat(userId);
+      await this.loadChats();
+      this.openChat(commonChat.id, commonChat.title);
+      return;
+    } catch {
+      // общего чата нет — создаём новый
+    }
+
+    const title = name || login;
+    const response = await ChatsAPI.createChat(title);
+    await ChatsAPI.addUsersToChat([userId], response.id);
+    await this.loadChats();
+    this.openChat(response.id, title);
+  }
+
+  protected events = {
+    input: (event: Event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement) || target.name !== 'search') return;
+    
+      this.searchInputValue = target.value;
+      this.searchCursorPos = target.selectionStart;
+    
+      if (this.searchTimer) {
+        clearTimeout(this.searchTimer);
+      }
+    
+      this.searchTimer = setTimeout(() => {
+        void this.updateSearch(target.value)
+        .then(() => this.syncSearchInput(target.value))
+          .catch((error) => alert(getApiErrorReason(error)));
+      }, 300);
+    },
+
+    click: (event: Event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+
+      const chatItem = target.closest<HTMLElement>('[data-chat-id]');
+      if (chatItem && !this.props.isSearching) {
+        const id = Number(chatItem.dataset.chatId);
+        const title = chatItem.dataset.title ?? '';
+        if (!Number.isNaN(id)) {
+          this.openChat(id, title);
+        }
+        return;
+      }
+
+      const searchItem = target.closest<HTMLElement>('[data-search-type]');
+      if (!searchItem) return;
+
+      const type = searchItem.dataset.searchType;
+
+      void (async () => {
+        try {
+          if (type === 'new-chat') {
+            const title = searchItem.dataset.title?.trim() ?? '';
+            if (!title) return;
+            await this.handleCreateChat(title);
+            return;
+          }
+
+          if (type === 'chat') {
+            const id = Number(searchItem.dataset.id);
+            const title = searchItem.dataset.title ?? '';
+            if (Number.isNaN(id)) return;
+            this.openChat(id, title);
+            return;
+          }
+
+          if (type === 'user') {
+            const userId = Number(searchItem.dataset.id);
+            const name = searchItem.dataset.name ?? '';
+            const login = searchItem.dataset.login ?? '';
+            if (Number.isNaN(userId)) return;
+            await this.handleCreateChatWithUser(userId, name, login);
+          }
+        } catch (error) {
+          alert(getApiErrorReason(error));
+        }
+      })();
+    },
+  };
 }
