@@ -4,6 +4,7 @@ type RequestOptions = {
   headers?: Record<string, string>;
   data?: unknown;
   timeout?: number;
+  isFormData?: boolean;
 };
 
 export class HTTPTransport {
@@ -19,8 +20,14 @@ export class HTTPTransport {
       xhr.withCredentials = true;
       xhr.timeout = options.timeout ?? 5000;
 
-      const headers = { 'Content-Type': 'application/json', ...options.headers };
-      Object.entries(headers).forEach(([k, v]) => xhr.setRequestHeader(k, v));
+      if (options.isFormData) {
+        Object.entries(options.headers ?? {}).forEach(([k, v]) => xhr.setRequestHeader(k, v));
+        xhr.send(options.data as FormData);
+      } else {
+        const headers = { 'Content-Type': 'application/json', ...options.headers };
+        Object.entries(headers).forEach(([k, v]) => xhr.setRequestHeader(k, v));
+        xhr.send(options.data ? JSON.stringify(options.data) : undefined);
+      }
 
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) resolve(xhr.response);
@@ -28,8 +35,6 @@ export class HTTPTransport {
       };
       xhr.onerror = () => reject('Network error');
       xhr.ontimeout = () => reject('Timeout');
-
-      xhr.send(options.data ? JSON.stringify(options.data) : undefined);
     });
   }
 }

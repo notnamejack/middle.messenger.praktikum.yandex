@@ -1,6 +1,8 @@
 const RULES: Record<string, {re: RegExp; message: string }> = {
     login: {re: /^(?=.*[A-Za-z])[A-Za-z0-9_-]{3,20}$/, message: '3–20 символов, латиница. Может содержать цифры, но не состоит только из них. Без пробелов, допустимы дефис и подчёркивание.'},
     password: {re: /^(?=.*[A-Z])(?=.*\d).{8,40}$/, message: '8–40 символов, минимум одна заглавная буква и одна цифра.'},
+    oldPassword: { re: /^(?!\s*$).+$/, message: 'Введите текущий пароль' },
+    newPassword: { re: /^(?=.*[A-Z])(?=.*\d).{8,40}$/, message: '8–40 символов, минимум одна заглавная буква и одна цифра.' },
     email: { re: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Латиница, цифры и спецсимволы. Обязательны @ и точка после него. Между @ и точкой должны быть буквы.'},
     phone: { re: /^\+?\d{10,15}$/, message: '10–15 символов, цифры, может начинаться с плюса.'},
     first_name: {re: /^[A-ZА-ЯЁ][A-Za-zА-Яа-яЁё-]+$/, message: 'Латиница или кириллица, первая буква заглавная. Без пробелов и цифр, из спецсимволов — только дефис.'},
@@ -18,9 +20,17 @@ const CROSS_FIELD_RULES: Record<string, {
       return password?.value.trim() === input.value.trim();
     },
   },
+  newPassword_repeat: {
+    message: 'Пароли должны совпадать',
+    validate: (input, form) => {
+      const newPassword = form.querySelector<HTMLInputElement>('input[name="newPassword"]');
+      return newPassword?.value.trim() === input.value.trim();
+    },
+  },
 };
 const RELATED_FIELDS: Record<string, string[]> = {
-  password: ['password_repeat'],
+  password: ['password_repeat'],  
+  newPassword: ['newPassword_repeat'],
 };
 
 function setFieldError(input: HTMLInputElement, message: string) {

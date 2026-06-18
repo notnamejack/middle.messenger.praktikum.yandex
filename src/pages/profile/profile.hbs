@@ -4,58 +4,48 @@
     </div>
     <div class="setting">
         <div class="phote-profile">
-            <div class="foto empty"></div>
-            <p class="name">Иван</p>
+            <label class="foto-label" for="avatar">
+                {{#if avatarUrl}}
+                    <img class="foto" src="{{avatarUrl}}" alt="Аватар" />
+                {{else}}
+                    <div class="foto empty"></div>
+                {{/if}}
+            </label>
+            <input
+                ref="avatar"
+                class="avatar-input"
+                id="avatar"
+                type="file"
+                accept="image/*"
+            />
+            <p class="name">{{displayName}}</p>
         </div>
-        <form class="form">
+
+        <form class="form" ref="form">
             <div class="form-body">
-                {{{ InputHorizontal
-                    id="email"
-                    name="email"
-                    label="Почта"
-                    type="email"
-                    value="pochta@yandex.ru"
-                }}}
-                {{{ InputHorizontal
-                    id="login"
-                    name="login"
-                    label="Логин"
-                    type="text"
-                    value="ivanivanov"
-                }}}
-                {{{ InputHorizontal
-                    id="first_name"
-                    name="first_name"
-                    label="Имя"
-                    type="text"
-                    value="Иван"
-                }}}
-                {{{ InputHorizontal
-                    id="second_name"
-                    name="second_name"
-                    label="Фамилия"
-                    type="text"
-                    value="Иванов"
-                }}}
-                {{{ InputHorizontal
-                    id="display_name"
-                    name="display_name"
-                    label="Имя в чате"
-                    type="text"
-                    value="Иван"
-                }}}
-                {{{ InputHorizontal
-                    id="phone"
-                    name="phone"
-                    label="Телефон"
-                    type="tel"
-                    value="+7 (909) 967 30 30"
-                }}}
+                {{#unless isPasswordMode}}
+                    {{{ InputHorizontal id="email" name="email" label="Почта" type="email" value=email disabled=profileDisabled }}}
+                    {{{ InputHorizontal id="login" name="login" label="Логин" type="text" value=login disabled=profileDisabled }}}
+                    {{{ InputHorizontal id="first_name" name="first_name" label="Имя" type="text" value=first_name disabled=profileDisabled }}}
+                    {{{ InputHorizontal id="second_name" name="second_name" label="Фамилия" type="text" value=second_name disabled=profileDisabled }}}
+                    {{{ InputHorizontal id="display_name" name="display_name" label="Имя в чате" type="text" value=display_name disabled=profileDisabled }}}
+                    {{{ InputHorizontal id="phone" name="phone" label="Телефон" type="tel" value=phone disabled=profileDisabled }}}
+                {{else}}
+                    {{{ InputHorizontal id="oldPassword" name="oldPassword" label="Старый пароль" placeholder="Введите старый пароль" type="password" }}}
+                    {{{ InputHorizontal id="newPassword" name="newPassword" label="Новый пароль" placeholder="Введите новый пароль" type="password" }}}
+                    {{{ InputHorizontal id="newPassword_repeat" name="newPassword_repeat" placeholder="Повторите новый пароль" label="Повторите новый пароль" type="password" }}}
+                {{/unless}}
             </div>
-            <div class="form-footer">
-                <a class="edit">Изменить данные</a>
-                <a class="edit">Изменить пароль</a>
-                <a class="out" ref="logout" data-link>Выйти</a>
+
+            <div class="form-footer{{#if isEditing}} form-footer--editing{{/if}}">
+                {{#if isEditing}}
+                    <button type="button" class="btn save" data-action="{{editAction}}">Сохранить</button>
+                    <a class="out cancel">Отмена</a>
+                {{else}}
+                    <a class="edit" data-action="profile">Изменить данные</a>
+                    <a class="edit" data-action="password">Изменить пароль</a>
+                    <a class="out" data-link>Выйти</a>
+                {{/if}}
             </div>
         </form>
     </div>

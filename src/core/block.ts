@@ -47,9 +47,14 @@ export default abstract class Block<Props extends BlockOwnProps = BlockOwnProps>
 
   protected componentDidMount() {}
 
+  private isMounted = false;
+  
   private mountComponent() {
     this.attachListeners();
-    this.componentDidMount();
+    if (!this.isMounted) {
+      this.isMounted = true;
+      this.componentDidMount();
+    }
   }
 
   protected componentWillUnmount() {}
