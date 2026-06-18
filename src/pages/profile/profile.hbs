@@ -2,23 +2,28 @@
     <div class="link-group">
         <a class="back" href="/messenger" data-link></a>
     </div>
+
     <div class="setting">
         <div class="phote-profile">
-            <label class="foto-label" for="avatar">
+            <div class="foto-label" data-action="open-avatar-modal">
                 {{#if avatarUrl}}
                     <img class="foto" src="{{avatarUrl}}" alt="Аватар" />
                 {{else}}
                     <div class="foto empty"></div>
                 {{/if}}
-            </label>
+                <span class="foto-label__text">Поменять аватар</span>
+            </div>
+
             <input
                 ref="avatar"
                 class="avatar-input"
-                id="avatar"
                 type="file"
                 accept="image/*"
             />
-            <p class="name">{{displayName}}</p>
+
+            {{#unless isPasswordMode}}
+                <p class="name">{{displayName}}</p>
+            {{/unless}}
         </div>
 
         <form class="form" ref="form">
@@ -49,4 +54,33 @@
             </div>
         </form>
     </div>
+
+    {{#if isAvatarModalOpen}}
+        <div class="avatar-modal-overlay">
+            <div class="avatar-modal">
+                {{#if isAvatarFileSelected}}
+                    <p class="avatar-modal__title">Файл загружен</p>
+                    <p class="avatar-modal__filename">{{selectedAvatarName}}</p>
+                {{else if isAvatarApiError}}
+                    <p class="avatar-modal__title avatar-modal__title--error">Ошибка, попробуйте ещё раз</p>
+                    <button type="button" class="avatar-modal__link" data-action="pick-avatar">
+                        Выбрать файл на компьютере
+                    </button>
+                {{else}}
+                    <p class="avatar-modal__title">Загрузите файл</p>
+                    <button type="button" class="avatar-modal__link" data-action="pick-avatar">
+                        Выбрать файл на компьютере
+                    </button>
+                {{/if}}
+
+                <button type="button" class="btn avatar-modal__submit" data-action="upload-avatar">
+                    Поменять
+                </button>
+
+                {{#if isAvatarValidationError}}
+                    <p class="avatar-modal__error">Нужно выбрать файл</p>
+                {{/if}}
+            </div>
+        </div>
+    {{/if}}
 </main>

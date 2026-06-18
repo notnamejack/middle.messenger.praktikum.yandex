@@ -10,6 +10,8 @@ import template from './profile.hbs?raw';
 
 type ProfileMode = 'view' | 'edit-profile' | 'edit-password';
 
+type AvatarModalState = 'closed' | 'idle' | 'file-selected' | 'validation-error' | 'api-error';
+
 type ProfilePageProps = BlockOwnProps & {
   mode: ProfileMode;
   avatarUrl: string | null;
@@ -24,13 +26,47 @@ type ProfilePageProps = BlockOwnProps & {
   isPasswordMode: boolean;
   isEditing: boolean;
   editAction: 'profile' | 'password' | '';
+  isAvatarModalOpen: boolean;
+  selectedAvatarName: string;
+  isAvatarFileSelected: boolean;
+  isAvatarApiError: boolean;
+  isAvatarValidationError: boolean;
+};
+
+const EMPTY_USER: UserResponse = {
+  id: 0,
+  first_name: '',
+  second_name: '',
+  display_name: '',
+  login: '',
+  email: '',
+  phone: '',
+  avatar: null,
 };
 
 function getDisplayName(user: UserResponse): string {
   return user.display_name || `${user.first_name} ${user.second_name}`;
 }
 
-function mapUserToProps(user: UserResponse, mode: ProfileMode = 'view'): ProfilePageProps {
+function getAvatarModalFlags(state: AvatarModalState) {
+  return {
+    isAvatarFileSelected: state === 'file-selected',
+    isAvatarApiError: state === 'api-error',
+    isAvatarValidationError: state === 'validation-error',
+  };
+}
+
+function mapUserToProps(
+  user: UserResponse,
+  mode: ProfileMode = 'view',
+  avatarModal: {
+    isOpen?: boolean;
+    state?: AvatarModalState;
+    selectedAvatarName?: string;
+  } = {},
+): ProfilePageProps {
+  const modalState = avatarModal.state ?? 'closed';
+
   return {
     mode,
     avatarUrl: getAvatarUrl(user.avatar),
@@ -45,21 +81,17 @@ function mapUserToProps(user: UserResponse, mode: ProfileMode = 'view'): Profile
     isPasswordMode: mode === 'edit-password',
     isEditing: mode !== 'view',
     editAction: mode === 'edit-profile' ? 'profile' : mode === 'edit-password' ? 'password' : '',
+    isAvatarModalOpen: avatarModal.isOpen ?? false,
+    selectedAvatarName: avatarModal.selectedAvatarName ?? '',
+    ...getAvatarModalFlags(modalState),
   };
 }
 
 export default class ProfilePage extends Block<ProfilePageProps> {
+  private selectedAvatarFile: File | null = null;
+
   constructor() {
-    super(mapUserToProps({
-      id: 0,
-      first_name: '',
-      second_name: '',
-      display_name: '',
-      login: '',
-      email: '',
-      phone: '',
-      avatar: null,
-    }));
+    super(mapUserToProps(EMPTY_USER));
   }
 
   protected template = template;
@@ -79,26 +111,69 @@ export default class ProfilePage extends Block<ProfilePageProps> {
   }
 
   private setMode(mode: ProfileMode) {
+    const user: UserResponse = {
+      ...EMPTY_USER,
+      first_name: this.props.first_name,
+      second_name: this.props.second_name,
+      display_name: this.props.display_name,
+      login: this.props.login,
+      email: this.props.email,
+      phone: this.props.phone,
+      avatar: null,
+    };
+
     this.setProps({
-      ...this.props,
-      ...mapUserToProps({
-        id: 0,
-        first_name: this.props.first_name,
-        second_name: this.props.second_name,
-        display_name: this.props.display_name,
-        login: this.props.login,
-        email: this.props.email,
-        phone: this.props.phone,
-        avatar: null,
-      }, mode),
+      ...mapUserToProps(user, mode),
       avatarUrl: this.props.avatarUrl,
       displayName: this.props.displayName,
     });
   }
 
+  private openAvatarModal() {
+    this.selectedAvatarFile = null;
+    this.setProps({
+      ...mapUserToProps(
+        {
+          ...EMPTY_USER,
+          first_name: this.props.first_name,
+          second_name: this.props.second_name,
+          display_name: this.props.display_name,
+          login: this.props.login,
+          email: this.props.email,
+          phone: this.props.phone,
+        },
+        this.props.mode,
+        { isOpen: true, state: 'idle', selectedAvatarName: '' },
+      ),
+      avatarUrl: this.props.avatarUrl,
+    });
+  }
+
+  private closeAvatarModal() {
+    this.selectedAvatarFile = null;
+    this.setProps({
+      ...mapUserToProps(
+        {
+          ...EMPTY_USER,
+          first_name: this.props.first_name,
+          second_name: this.props.second_name,
+          display_name: this.props.display_name,
+          login: this.props.login,
+          email: this.props.email,
+          phone: this.props.phone,
+        },
+        this.props.mode,
+        { isOpen: false, state: 'closed', selectedAvatarName: '' },
+      ),
+      avatarUrl: this.props.avatarUrl,
+    });
+  }
+
   private async saveProfile(form: HTMLFormElement) {
     const inputs = Array.from(
-      form.querySelectorAll<HTMLInputElement>('input[name]:not([name="oldPassword"]):not([name="newPassword"])'),
+      form.querySelectorAll<HTMLInputElement>(
+        'input[name]:not([name="oldPassword"]):not([name="newPassword"]):not([name="newPassword_repeat"])',
+      ),
     );
     const isValid = inputs.map(validateField).every(Boolean);
     if (!isValid) return;
@@ -133,8 +208,12 @@ export default class ProfilePage extends Block<ProfilePageProps> {
 
     const { oldPassword, newPassword } = getFormValues(form);
 
-    await UserAPI.changePassword({ oldPassword, newPassword });
-    this.setMode('view');
+    try {
+      await UserAPI.changePassword({ oldPassword, newPassword });
+      this.setMode('view');
+    } catch (error) {
+      alert(getApiErrorReason(error));
+    }
   }
 
   private async uploadAvatar(file: File) {
@@ -144,9 +223,28 @@ export default class ProfilePage extends Block<ProfilePageProps> {
     try {
       await UserAPI.uploadAvatar(formData);
       const user = await AuthAPI.getUser();
+      this.selectedAvatarFile = null;
       this.setProps(mapUserToProps(user, this.props.mode));
-    } catch (error) {
-      alert(getApiErrorReason(error));
+    } catch {
+      this.setProps(
+        mapUserToProps(
+          {
+            ...EMPTY_USER,
+            first_name: this.props.first_name,
+            second_name: this.props.second_name,
+            display_name: this.props.display_name,
+            login: this.props.login,
+            email: this.props.email,
+            phone: this.props.phone,
+          },
+          this.props.mode,
+          {
+            isOpen: true,
+            state: 'api-error',
+            selectedAvatarName: this.props.selectedAvatarName,
+          },
+        ),
+      );
     }
   }
 
@@ -162,13 +260,80 @@ export default class ProfilePage extends Block<ProfilePageProps> {
       const target = event.target;
       if (!(target instanceof HTMLInputElement)) return;
       if (target.type !== 'file' || !target.files?.[0]) return;
-      void this.uploadAvatar(target.files[0]);
+
+      const file = target.files[0];
+      this.selectedAvatarFile = file;
+
+      this.setProps(
+        mapUserToProps(
+          {
+            ...EMPTY_USER,
+            first_name: this.props.first_name,
+            second_name: this.props.second_name,
+            display_name: this.props.display_name,
+            login: this.props.login,
+            email: this.props.email,
+            phone: this.props.phone,
+          },
+          this.props.mode,
+          {
+            isOpen: true,
+            state: 'file-selected',
+            selectedAvatarName: file.name,
+          },
+        ),
+      );
+
       target.value = '';
     },
 
     click: async (event: Event) => {
       const target = event.target;
       if (!(target instanceof HTMLElement)) return;
+
+      const actionEl = target.closest<HTMLElement>('[data-action]');
+      const action = actionEl?.dataset.action;
+
+      if (action === 'open-avatar-modal') {
+        this.openAvatarModal();
+        return;
+      }
+
+      if (action === 'pick-avatar') {
+        const input = this.refs.avatar;
+        if (input instanceof HTMLInputElement) input.click();
+        return;
+      }
+
+      if (action === 'upload-avatar') {
+        if (!this.selectedAvatarFile) {
+          this.setProps({
+            ...mapUserToProps(
+              {
+                ...EMPTY_USER,
+                first_name: this.props.first_name,
+                second_name: this.props.second_name,
+                display_name: this.props.display_name,
+                login: this.props.login,
+                email: this.props.email,
+                phone: this.props.phone,
+              },
+              this.props.mode,
+              { isOpen: true, state: 'validation-error', selectedAvatarName: '' },
+            ),
+            avatarUrl: this.props.avatarUrl,
+          });
+          return;
+        }
+
+        await this.uploadAvatar(this.selectedAvatarFile);
+        return;
+      }
+
+      if (target.classList.contains('avatar-modal-overlay')) {
+        this.closeAvatarModal();
+        return;
+      }
 
       if (target.classList.contains('cancel')) {
         try {
@@ -194,15 +359,14 @@ export default class ProfilePage extends Block<ProfilePageProps> {
       if (!(form instanceof HTMLFormElement)) return;
 
       if (target.classList.contains('save')) {
-        const action = target.dataset.action;
-        if (action === 'profile') await this.saveProfile(form);
-        if (action === 'password') await this.savePassword(form);
+        const saveAction = target.dataset.action;
+        if (saveAction === 'profile') await this.saveProfile(form);
+        if (saveAction === 'password') await this.savePassword(form);
         return;
       }
 
       if (!target.classList.contains('edit')) return;
 
-      const action = target.dataset.action;
       if (action === 'profile') this.setMode('edit-profile');
       if (action === 'password') this.setMode('edit-password');
     },
