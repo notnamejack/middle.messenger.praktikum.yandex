@@ -1,4 +1,8 @@
-<li class="item">
+<li
+    class="item{{#if active}} item--active{{/if}}"
+    data-chat-id="{{id}}"
+    data-title="{{name}}"
+>
   <div class="avatar empty"></div>
   <div class="message">
     <p class="name">{{name}}</p>

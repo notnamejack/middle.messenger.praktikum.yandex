@@ -1,62 +1,86 @@
 <main class="container-profile">
     <div class="link-group">
-        <a class="back" href="/" data-link></a>
+        <a class="back" href="/messenger" data-link></a>
     </div>
+
     <div class="setting">
         <div class="phote-profile">
-            <div class="foto empty"></div>
-            <p class="name">Иван</p>
-        </div>
-        <form class="form">
-            <div class="form-body">
-                {{{ InputHorizontal
-                    id="email"
-                    name="email"
-                    label="Почта"
-                    type="email"
-                    value="pochta@yandex.ru"
-                }}}
-                {{{ InputHorizontal
-                    id="login"
-                    name="login"
-                    label="Логин"
-                    type="text"
-                    value="ivanivanov"
-                }}}
-                {{{ InputHorizontal
-                    id="first_name"
-                    name="first_name"
-                    label="Имя"
-                    type="text"
-                    value="Иван"
-                }}}
-                {{{ InputHorizontal
-                    id="second_name"
-                    name="second_name"
-                    label="Фамилия"
-                    type="text"
-                    value="Иванов"
-                }}}
-                {{{ InputHorizontal
-                    id="display_name"
-                    name="display_name"
-                    label="Имя в чате"
-                    type="text"
-                    value="Иван"
-                }}}
-                {{{ InputHorizontal
-                    id="phone"
-                    name="phone"
-                    label="Телефон"
-                    type="tel"
-                    value="+7 (909) 967 30 30"
-                }}}
+            <div class="foto-label" data-action="open-avatar-modal">
+                {{#if avatarUrl}}
+                    <img class="foto" src="{{avatarUrl}}" alt="Аватар" />
+                {{else}}
+                    <div class="foto empty"></div>
+                {{/if}}
+                <span class="foto-label__text">Поменять аватар</span>
             </div>
-            <div class="form-footer">
-                <a class="edit">Изменить данные</a>
-                <a class="edit">Изменить пароль</a>
-                <a class="out" href="/login" data-link>Выйти</a>
+
+            <input
+                ref="avatar"
+                class="avatar-input"
+                type="file"
+                accept="image/*"
+            />
+
+            {{#unless isPasswordMode}}
+                <p class="name">{{displayName}}</p>
+            {{/unless}}
+        </div>
+
+        <form class="form" ref="form">
+            <div class="form-body">
+                {{#unless isPasswordMode}}
+                    {{{ InputHorizontal id="email" name="email" label="Почта" type="email" value=email disabled=profileDisabled }}}
+                    {{{ InputHorizontal id="login" name="login" label="Логин" type="text" value=login disabled=profileDisabled }}}
+                    {{{ InputHorizontal id="first_name" name="first_name" label="Имя" type="text" value=first_name disabled=profileDisabled }}}
+                    {{{ InputHorizontal id="second_name" name="second_name" label="Фамилия" type="text" value=second_name disabled=profileDisabled }}}
+                    {{{ InputHorizontal id="display_name" name="display_name" label="Имя в чате" type="text" value=display_name disabled=profileDisabled }}}
+                    {{{ InputHorizontal id="phone" name="phone" label="Телефон" type="tel" value=phone disabled=profileDisabled }}}
+                {{else}}
+                    {{{ InputHorizontal id="oldPassword" name="oldPassword" label="Старый пароль" placeholder="Введите старый пароль" type="password" }}}
+                    {{{ InputHorizontal id="newPassword" name="newPassword" label="Новый пароль" placeholder="Введите новый пароль" type="password" }}}
+                    {{{ InputHorizontal id="newPassword_repeat" name="newPassword_repeat" placeholder="Повторите новый пароль" label="Повторите новый пароль" type="password" }}}
+                {{/unless}}
+            </div>
+
+            <div class="form-footer{{#if isEditing}} form-footer--editing{{/if}}">
+                {{#if isEditing}}
+                    <button type="button" class="btn save" data-action="{{editAction}}">Сохранить</button>
+                    <a class="out cancel">Отмена</a>
+                {{else}}
+                    <a class="edit" data-action="profile">Изменить данные</a>
+                    <a class="edit" data-action="password">Изменить пароль</a>
+                    <a class="out" data-link>Выйти</a>
+                {{/if}}
             </div>
         </form>
     </div>
+
+    {{#if isAvatarModalOpen}}
+        <div class="avatar-modal-overlay">
+            <div class="avatar-modal">
+                {{#if isAvatarFileSelected}}
+                    <p class="avatar-modal__title">Файл загружен</p>
+                    <p class="avatar-modal__filename">{{selectedAvatarName}}</p>
+                {{else if isAvatarApiError}}
+                    <p class="avatar-modal__title avatar-modal__title--error">Ошибка, попробуйте ещё раз</p>
+                    <button type="button" class="avatar-modal__link" data-action="pick-avatar">
+                        Выбрать файл на компьютере
+                    </button>
+                {{else}}
+                    <p class="avatar-modal__title">Загрузите файл</p>
+                    <button type="button" class="avatar-modal__link" data-action="pick-avatar">
+                        Выбрать файл на компьютере
+                    </button>
+                {{/if}}
+
+                <button type="button" class="btn avatar-modal__submit" data-action="upload-avatar">
+                    Поменять
+                </button>
+
+                {{#if isAvatarValidationError}}
+                    <p class="avatar-modal__error">Нужно выбрать файл</p>
+                {{/if}}
+            </div>
+        </div>
+    {{/if}}
 </main>

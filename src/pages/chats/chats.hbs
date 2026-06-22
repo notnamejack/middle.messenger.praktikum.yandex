@@ -1,66 +1,231 @@
 <main class="page" id="page">
     <div class="container-message">
-    <div class="chats">
-        <div class="profile">
-            <a href="/profile" class="link" data-link>Профиль</a>
-        </div>
-        <div class="find">
-            <input id="message" name="message" class="find-chat" placeholder="Поиск"/>
-        </div>
-        <ul class="list">
-        {{#each chats}}
-            {{{ ChatItem name=name text=text time=time count=count prefix=prefix }}}
-        {{else}}
-            <li class="item empty">
-                <p class="desc">У вас нет чатов</p>
-            </li>
-        {{/each}}
-        </ul>
-    </div>
-    <!-- message -->
-    <div class="chat">
-        <!-- <p class="desc">Выберите чат чтобы отправить сообщение</p> -->
-        <div class="chat-item">
-            <div class="header">
-                <div class="user">
-                    <div class="avatar empty"></div>
-                    <p class="name">Андрей</p>
-                </div>
-            <div class="setting">
-                <span></span>
-                <span></span>
-                <span></span>
+        <div class="chats">
+            <div class="profile">
+                <a href="/settings" class="link" data-link>Профиль</a>
             </div>
-            </div>
-            <div class="body">
-                <div class="datetime">
-                    <p>19 июня</p>
-                </div>
-                <div class="message-list">
-                    <div class="message user">
-                    <p class="text">
-                        Привет! Смотри, тут всплыл интересный кусок лунной космической истории — НАСА в какой-то момент попросила Хассельблад адаптировать модель SWC для полетов на Луну. Сейчас мы все знаем что астронавты летали с моделью 500 EL — и к слову говоря, все тушки этих камер все еще находятся на поверхности Луны, так как астронавты с собой забрали только кассеты с пленкой.
 
-    Хассельблад в итоге адаптировал SWC для космоса, но что-то пошло не так и на ракету они так никогда и не попали. Всего их было произведено 25 штук, одну из них недавно продали на аукционе за 45000 евро.
-                    </p>
-                    <p class="time">11:56</p>
+            <div class="find">
+                <input
+                    ref="search"
+                    name="search"
+                    class="find-chat"
+                    placeholder="Поиск"
+                    autocomplete="off"
+                />
+            </div>
+
+            <ul class="list">
+                {{#if isSearching}}
+                    {{#each searchResults}}
+                        {{#if isNewChat}}
+                            <li
+                                class="item search-item"
+                                data-search-type="new-chat"
+                                data-title="{{title}}"
+                            >
+                                <div class="avatar empty"></div>
+                                <div class="message">
+                                    <p class="name">{{title}}</p>
+                                    <p class="text-message search-item__hint">Новый чат</p>
+                                </div>
+                            </li>
+                        {{/if}}
+
+                        {{#if isChat}}
+                            <li
+                                class="item search-item{{#if active}} item--active{{/if}}"
+                                data-search-type="chat"
+                                data-id="{{id}}"
+                                data-title="{{name}}"
+                            >
+                                <div class="avatar empty"></div>
+                                <div class="message">
+                                    <p class="name">{{name}}</p>
+                                    <p class="text-message">
+                                        {{#if prefix}}<span>{{prefix}}</span>{{/if}}{{text}}
+                                    </p>
+                                </div>
+                                <div class="metrika">
+                                    <p class="time">{{time}}</p>
+                                    {{#if count}}<p class="count">{{count}}</p>{{/if}}
+                                </div>
+                            </li>
+                        {{/if}}
+
+                        {{#if isUser}}
+                            <li
+                                class="item search-item"
+                                data-search-type="user"
+                                data-id="{{id}}"
+                                data-name="{{name}}"
+                                data-login="{{login}}"
+                            >
+                                <div class="avatar{{#unless avatarUrl}} empty{{/unless}}">
+                                    {{#if avatarUrl}}
+                                        <img src="{{avatarUrl}}" alt="" />
+                                    {{/if}}
+                                </div>
+                                <div class="message">
+                                    <p class="name">{{name}}</p>
+                                    <p class="text-message search-item__hint">{{login}}</p>
+                                </div>
+                            </li>
+                        {{/if}}
+                    {{/each}}
+                {{else}}
+                    {{#each chats}}
+                        {{{ ChatItem
+                            id=id
+                            name=name
+                            text=text
+                            time=time
+                            count=count
+                            prefix=prefix
+                            active=active
+                        }}}
+                    {{else}}
+                        <li class="item empty">
+                            <p class="desc">У вас нет чатов</p>
+                        </li>
+                    {{/each}}
+                {{/if}}
+            </ul>
+        </div>
+
+        <div class="chat{{#unless activeChatId}} empty{{/unless}}">
+            {{#unless activeChatId}}
+                <p class="desc">Выберите чат чтобы отправить сообщение</p>
+            {{/unless}}
+
+            {{#if activeChatId}}
+                <div class="chat-item">
+                    <div class="header">
+                        <div class="user">
+                            <div class="avatar empty"></div>
+                            <p class="name">{{activeChatTitle}}</p>
+                        </div>
+
+                        <div class="setting-wrap">
+                            <button
+                                type="button"
+                                class="setting"
+                                data-action="toggle-chat-menu"
+                                aria-label="Меню чата"
+                            >
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </button>
+
+                            {{#if chatMenuOpen}}
+                                <div class="chat-menu">
+                                    <button
+                                        type="button"
+                                        class="chat-menu__item"
+                                        data-action="open-add-user"
+                                    >
+                                        <span class="chat-menu__icon chat-menu__icon--add"></span>
+                                        Добавить пользователя
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="chat-menu__item"
+                                        data-action="open-remove-user"
+                                    >
+                                        <span class="chat-menu__icon chat-menu__icon--remove"></span>
+                                        Удалить пользователя
+                                    </button>
+                                </div>
+                            {{/if}}
+                        </div>
                     </div>
-                    <div class="message user photo">
-                        <img src="/assets/image.png" alt="foto">
-                        <p class="time">11:56</p>
+
+                    <div class="body">
+                        <div class="datetime">
+                            <p></p>
+                        </div>
+
+                        {{!-- sprint 4: WebSocket — лента сообщений
+                        <div class="message-list">
+                            <div class="message user">
+                                <p class="text">...</p>
+                                <p class="time">11:56</p>
+                            </div>
+                            <div class="message my">
+                                <p class="text">Круто!</p>
+                                <p class="time">12:00</p>
+                            </div>
+                        </div>
+                        --}}
                     </div>
-                    <div class="message my">
-                        <p class="text">Круто!</p>
-                        <p class="time">12:00</p>
+
+                    <div class="footer">
+                        <button type="button" class="btn-file"></button>
+                        <input
+                            type="text"
+                            class="input-message"
+                            placeholder="Сообщение"
+                            name="message"
+                        />
+                        <button type="button" class="btn-send"></button>
                     </div>
                 </div>
-            </div>
-            <div class="footer">
-                <button class="btn-file"></button>
-                <input type="text" class="input-message" placeholder="Сообщение" id="message" name="message"/>
-                <button class="btn-send"></button>
-            </div>
+            {{/if}}
         </div>
     </div>
-    </div>
+
+    {{#if isAddUserModalOpen}}
+        <div class="chat-modal-overlay">
+            <div class="chat-modal">
+                <p class="chat-modal__title">Добавить пользователя</p>
+
+                <label class="chat-modal__field">
+                    <span class="chat-modal__label">Логин</span>
+                    <input
+                        ref="modalLogin"
+                        class="chat-modal__input"
+                        type="text"
+                        name="login"
+                        autocomplete="off"
+                    />
+                </label>
+
+                {{#if modalError}}
+                    <p class="chat-modal__error">{{modalError}}</p>
+                {{/if}}
+
+                <button type="button" class="btn chat-modal__submit" data-action="submit-add-user">
+                    Добавить
+                </button>
+            </div>
+        </div>
+    {{/if}}
+
+    {{#if isRemoveUserModalOpen}}
+        <div class="chat-modal-overlay">
+            <div class="chat-modal">
+                <p class="chat-modal__title">Удалить пользователя</p>
+
+                <label class="chat-modal__field">
+                    <span class="chat-modal__label">Логин</span>
+                    <input
+                        ref="modalLogin"
+                        class="chat-modal__input"
+                        type="text"
+                        name="login"
+                        autocomplete="off"
+                    />
+                </label>
+
+                {{#if modalError}}
+                    <p class="chat-modal__error">{{modalError}}</p>
+                {{/if}}
+
+                <button type="button" class="btn chat-modal__submit" data-action="submit-remove-user">
+                    Удалить
+                </button>
+            </div>
+        </div>
+    {{/if}}
 </main>
