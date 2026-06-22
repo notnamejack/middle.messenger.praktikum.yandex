@@ -127,18 +127,102 @@
             }
           }
 
-          .setting{
+                    .setting-wrap {
+            position: relative;
+          }
+
+          .setting {
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 3px;
+            padding: 4px;
+            border: none;
+            background: transparent;
             cursor: pointer;
 
-            span{
+            span {
               width: 3px;
               height: 3px;
               background-color: $text;
               border-radius: 100%;
+            }
+          }
+
+          .chat-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            min-width: 220px;
+            padding: 8px 0;
+            background-color: $bg;
+            border-radius: 12px;
+            box-shadow: 0 0 20px $shadow;
+
+            &__item {
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              width: 100%;
+              padding: 10px 16px;
+              border: none;
+              background: transparent;
+              font-size: 13px;
+              font-weight: 500;
+              color: $text;
+              text-align: left;
+              cursor: pointer;
+
+              &:hover {
+                background-color: $grey;
+              }
+            }
+
+            &__icon {
+              width: 20px;
+              height: 20px;
+              border-radius: 50%;
+              border: 2px solid $accent;
+              position: relative;
+              flex-shrink: 0;
+              box-sizing: border-box;
+
+              &--add::before,
+              &--add::after,
+              &--remove::before,
+              &--remove::after {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                background-color: $accent;
+                transform: translate(-50%, -50%);
+              }
+
+              &--add::before {
+                width: 8px;
+                height: 2px;
+              }
+
+              &--add::after {
+                width: 2px;
+                height: 8px;
+              }
+
+              &--remove::before {
+                width: 8px;
+                height: 2px;
+                transform: translate(-50%, -50%) rotate(45deg);
+              }
+
+              &--remove::after {
+                width: 8px;
+                height: 2px;
+                transform: translate(-50%, -50%) rotate(-45deg);
+              }
             }
           }
         }
@@ -282,5 +366,67 @@
         }
       }
     }
+  }
+}
+.chat-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgb(0 0 0 / 40%);
+}
+
+.chat-modal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 340px;
+  padding: 30px;
+  background-color: $bg;
+  border-radius: 12px;
+
+  &__title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 500;
+    color: $text;
+    text-align: center;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+  }
+
+  &__label {
+    font-size: 12px;
+    color: $desc;
+  }
+
+  &__input {
+    width: 100%;
+    padding: 8px 0;
+    border: none;
+    border-bottom: 1px solid $accent;
+    outline: none;
+    font-size: 14px;
+    color: $text;
+    background: transparent;
+  }
+
+  &__error {
+    margin: 0;
+    font-size: 12px;
+    color: $warning;
+    text-align: center;
+  }
+
+  &__submit {
+    margin-top: 8px;
   }
 }

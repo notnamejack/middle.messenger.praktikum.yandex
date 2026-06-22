@@ -7,13 +7,6 @@ import { getAvatarUrl } from '../../utils/avatar';
 import { getApiErrorReason } from '../../utils/api-error';
 import template from './chats.hbs?raw';
 
-// sprint 4: мок для вёрстки
-// const CHATS = [
-//   { name: 'Андрей', text: 'Изображение', time: '10:49', count: 2 },
-//   { name: 'Киноклуб', text: 'стикер', time: '10:49', prefix: 'Вы: ' },
-//   { name: 'Илья', text: 'Друзья, у меня...', time: '10:49', count: 4 },
-// ];
-
 type ChatListItem = {
   id: number;
   name: string;
@@ -50,6 +43,10 @@ type ChatsPageProps = BlockOwnProps & {
   searchResults: SearchResultItem[];
   activeChatId: number | null;
   activeChatTitle: string;
+  chatMenuOpen: boolean;
+  isAddUserModalOpen: boolean;
+  isRemoveUserModalOpen: boolean;
+  modalError: string;
 };
 
 function formatTime(iso: string): string {
@@ -96,6 +93,10 @@ export default class ChatsPage extends Block<ChatsPageProps> {
       searchResults: [],
       activeChatId: null,
       activeChatTitle: '',
+      chatMenuOpen: false,
+      isAddUserModalOpen: false,
+      isRemoveUserModalOpen: false,
+      modalError: '',
     });
   }
 
@@ -113,14 +114,44 @@ export default class ChatsPage extends Block<ChatsPageProps> {
     }));
   }
 
+  private closeChatMenu() {
+    this.setProps({ chatMenuOpen: false });
+  }
+
+  private closeUserModal() {
+    this.setProps({
+      isAddUserModalOpen: false,
+      isRemoveUserModalOpen: false,
+      modalError: '',
+    });
+  }
+
+  private openAddUserModal() {
+    this.setProps({
+      chatMenuOpen: false,
+      isAddUserModalOpen: true,
+      isRemoveUserModalOpen: false,
+      modalError: '',
+    });
+  }
+
+  private openRemoveUserModal() {
+    this.setProps({
+      chatMenuOpen: false,
+      isAddUserModalOpen: false,
+      isRemoveUserModalOpen: true,
+      modalError: '',
+    });
+  }
+
   private syncSearchInput(query: string) {
     const input = this.refs.search;
     if (!(input instanceof HTMLInputElement)) return;
-  
+
     input.value = query;
-  
+
     if (!this.props.isSearching) return;
-  
+
     input.focus();
     const pos = this.searchCursorPos ?? query.length;
     input.setSelectionRange(pos, pos);
@@ -216,10 +247,12 @@ export default class ChatsPage extends Block<ChatsPageProps> {
       activeChatId: id,
       activeChatTitle: title,
       chats: this.withActiveChats(this.allChats),
+      chatMenuOpen: false,
+      isAddUserModalOpen: false,
+      isRemoveUserModalOpen: false,
+      modalError: '',
     });
     this.clearSearch();
-
-    // sprint 4: WebSocket + лента сообщений
   }
 
   private async handleCreateChat(title: string) {
@@ -245,21 +278,87 @@ export default class ChatsPage extends Block<ChatsPageProps> {
     this.openChat(response.id, title);
   }
 
+  private getModalLogin(): string {
+    const input = this.refs.modalLogin;
+    if (!(input instanceof HTMLInputElement)) return '';
+    return input.value.trim();
+  }
+
+  private async findUserByLogin(login: string): Promise<UserResponse | null> {
+    const users = await UserAPI.search(login);
+    return users.find((user) => user.login === login) ?? null;
+  }
+
+  private async handleAddUserToActiveChat() {
+    const chatId = this.props.activeChatId;
+    if (!chatId) return;
+
+    const login = this.getModalLogin();
+    if (!login) {
+      this.setProps({ modalError: 'Введите логин' });
+      return;
+    }
+
+    try {
+      const user = await this.findUserByLogin(login);
+      if (!user) {
+        this.setProps({ modalError: 'Пользователь не найден' });
+        return;
+      }
+
+      if (user.id === this.currentUserId) {
+        this.setProps({ modalError: 'Нельзя добавить себя' });
+        return;
+      }
+
+      await ChatsAPI.addUsersToChat([user.id], chatId);
+      this.closeUserModal();
+      await this.loadChats();
+    } catch (error) {
+      this.setProps({ modalError: getApiErrorReason(error) });
+    }
+  }
+
+  private async handleRemoveUserFromActiveChat() {
+    const chatId = this.props.activeChatId;
+    if (!chatId) return;
+
+    const login = this.getModalLogin();
+    if (!login) {
+      this.setProps({ modalError: 'Введите логин' });
+      return;
+    }
+
+    try {
+      const user = await this.findUserByLogin(login);
+      if (!user) {
+        this.setProps({ modalError: 'Пользователь не найден' });
+        return;
+      }
+
+      await ChatsAPI.removeUsersFromChat([user.id], chatId);
+      this.closeUserModal();
+      await this.loadChats();
+    } catch (error) {
+      this.setProps({ modalError: getApiErrorReason(error) });
+    }
+  }
+
   protected events = {
     input: (event: Event) => {
       const target = event.target;
       if (!(target instanceof HTMLInputElement) || target.name !== 'search') return;
-    
+
       this.searchInputValue = target.value;
       this.searchCursorPos = target.selectionStart;
-    
+
       if (this.searchTimer) {
         clearTimeout(this.searchTimer);
       }
-    
+
       this.searchTimer = setTimeout(() => {
         void this.updateSearch(target.value)
-        .then(() => this.syncSearchInput(target.value))
+          .then(() => this.syncSearchInput(target.value))
           .catch((error) => alert(getApiErrorReason(error)));
       }, 300);
     },
@@ -267,6 +366,43 @@ export default class ChatsPage extends Block<ChatsPageProps> {
     click: (event: Event) => {
       const target = event.target;
       if (!(target instanceof HTMLElement)) return;
+
+      const actionEl = target.closest<HTMLElement>('[data-action]');
+      const action = actionEl?.dataset.action;
+
+      if (action === 'toggle-chat-menu') {
+        this.setProps({ chatMenuOpen: !this.props.chatMenuOpen });
+        return;
+      }
+
+      if (action === 'open-add-user') {
+        this.openAddUserModal();
+        return;
+      }
+
+      if (action === 'open-remove-user') {
+        this.openRemoveUserModal();
+        return;
+      }
+
+      if (target.classList.contains('chat-modal-overlay')) {
+        this.closeUserModal();
+        return;
+      }
+
+      if (action === 'submit-add-user') {
+        void this.handleAddUserToActiveChat();
+        return;
+      }
+
+      if (action === 'submit-remove-user') {
+        void this.handleRemoveUserFromActiveChat();
+        return;
+      }
+
+      if (this.props.chatMenuOpen && !target.closest('.setting-wrap')) {
+        this.closeChatMenu();
+      }
 
       const chatItem = target.closest<HTMLElement>('[data-chat-id]');
       if (chatItem && !this.props.isSearching) {

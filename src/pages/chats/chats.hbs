@@ -105,10 +105,39 @@
                             <div class="avatar empty"></div>
                             <p class="name">{{activeChatTitle}}</p>
                         </div>
-                        <div class="setting">
-                            <span></span>
-                            <span></span>
-                            <span></span>
+
+                        <div class="setting-wrap">
+                            <button
+                                type="button"
+                                class="setting"
+                                data-action="toggle-chat-menu"
+                                aria-label="Меню чата"
+                            >
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </button>
+
+                            {{#if chatMenuOpen}}
+                                <div class="chat-menu">
+                                    <button
+                                        type="button"
+                                        class="chat-menu__item"
+                                        data-action="open-add-user"
+                                    >
+                                        <span class="chat-menu__icon chat-menu__icon--add"></span>
+                                        Добавить пользователя
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="chat-menu__item"
+                                        data-action="open-remove-user"
+                                    >
+                                        <span class="chat-menu__icon chat-menu__icon--remove"></span>
+                                        Удалить пользователя
+                                    </button>
+                                </div>
+                            {{/if}}
                         </div>
                     </div>
 
@@ -120,15 +149,7 @@
                         {{!-- sprint 4: WebSocket — лента сообщений
                         <div class="message-list">
                             <div class="message user">
-                                <p class="text">
-                                    Привет! Смотри, тут всплыл интересный кусок лунной космической истории — НАСА в какой-то момент попросила Хассельблад адаптировать модель SWC для полетов на Луну. Сейчас мы все знаем что астронавты летали с моделью 500 EL — и к слову говоря, все тушки этих камер все еще находятся на поверхности Луны, так как астронавты с собой забрали только кассеты с пленкой.
-
-                                    Хассельблад в итоге адаптировал SWC для космоса, но что-то пошло не так и на ракету они так никогда и не попали. Всего их было произведено 25 штук, одну из них недавно продали на аукционе за 45000 евро.
-                                </p>
-                                <p class="time">11:56</p>
-                            </div>
-                            <div class="message user photo">
-                                <img src="/assets/image.png" alt="foto">
+                                <p class="text">...</p>
                                 <p class="time">11:56</p>
                             </div>
                             <div class="message my">
@@ -153,4 +174,58 @@
             {{/if}}
         </div>
     </div>
+
+    {{#if isAddUserModalOpen}}
+        <div class="chat-modal-overlay">
+            <div class="chat-modal">
+                <p class="chat-modal__title">Добавить пользователя</p>
+
+                <label class="chat-modal__field">
+                    <span class="chat-modal__label">Логин</span>
+                    <input
+                        ref="modalLogin"
+                        class="chat-modal__input"
+                        type="text"
+                        name="login"
+                        autocomplete="off"
+                    />
+                </label>
+
+                {{#if modalError}}
+                    <p class="chat-modal__error">{{modalError}}</p>
+                {{/if}}
+
+                <button type="button" class="btn chat-modal__submit" data-action="submit-add-user">
+                    Добавить
+                </button>
+            </div>
+        </div>
+    {{/if}}
+
+    {{#if isRemoveUserModalOpen}}
+        <div class="chat-modal-overlay">
+            <div class="chat-modal">
+                <p class="chat-modal__title">Удалить пользователя</p>
+
+                <label class="chat-modal__field">
+                    <span class="chat-modal__label">Логин</span>
+                    <input
+                        ref="modalLogin"
+                        class="chat-modal__input"
+                        type="text"
+                        name="login"
+                        autocomplete="off"
+                    />
+                </label>
+
+                {{#if modalError}}
+                    <p class="chat-modal__error">{{modalError}}</p>
+                {{/if}}
+
+                <button type="button" class="btn chat-modal__submit" data-action="submit-remove-user">
+                    Удалить
+                </button>
+            </div>
+        </div>
+    {{/if}}
 </main>
