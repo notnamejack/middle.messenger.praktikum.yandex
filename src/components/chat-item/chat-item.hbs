@@ -1,0 +1,19 @@
+<li
+    class="item{{#if active}} item--active{{/if}}"
+    data-chat-id="{{id}}"
+    data-title="{{name}}"
+>
+  <div class="avatar{{#unless avatarUrl}} empty{{/unless}}">
+    {{#if avatarUrl}}
+      <img src="{{avatarUrl}}" alt="" />
+    {{/if}}
+  </div>
+  <div class="message">
+    <p class="name">{{name}}</p>
+    <p class="text-message">{{#if prefix}}<span>{{prefix}}</span>{{/if}}{{text}}</p>
+  </div>
+  <div class="metrika">
+    <p class="time">{{time}}</p>
+    {{#if count}}<p class="count">{{count}}</p>{{/if}}
+  </div>
+</li>

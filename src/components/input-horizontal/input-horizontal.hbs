@@ -1,0 +1,13 @@
+<div class="input-horizontal">
+    <label for="{{id}}">{{label}}</label>
+    <input
+        ref="input-horizontal-${{id}}"
+        id="{{id}}"
+        name="{{name}}"
+        placeholder="{{placeholder}}"
+        type="{{type}}"
+        value="{{value}}"
+        {{#if disabled}}disabled{{/if}}
+    />
+    <span class="field-error"></span>
+</div>
