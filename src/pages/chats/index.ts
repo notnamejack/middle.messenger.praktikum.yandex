@@ -385,6 +385,11 @@ export default class ChatsPage extends Block<ChatsPageProps> {
         return;
       }
 
+      if (action === 'close-modal') {
+        this.closeUserModal();
+        return;
+      }
+
       if (target.classList.contains('chat-modal-overlay')) {
         this.closeUserModal();
         return;
