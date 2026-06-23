@@ -46,6 +46,7 @@ type ChatsPageProps = BlockOwnProps & {
   chatMenuOpen: boolean;
   isAddUserModalOpen: boolean;
   isRemoveUserModalOpen: boolean;
+  isCreateChatModalOpen: boolean;
   modalError: string;
 };
 
@@ -96,6 +97,7 @@ export default class ChatsPage extends Block<ChatsPageProps> {
       chatMenuOpen: false,
       isAddUserModalOpen: false,
       isRemoveUserModalOpen: false,
+      isCreateChatModalOpen: false,
       modalError: '',
     });
   }
@@ -122,6 +124,17 @@ export default class ChatsPage extends Block<ChatsPageProps> {
     this.setProps({
       isAddUserModalOpen: false,
       isRemoveUserModalOpen: false,
+      isCreateChatModalOpen: false,
+      modalError: '',
+    });
+  }
+
+  private openCreateChatModal() {
+    this.setProps({
+      chatMenuOpen: false,
+      isAddUserModalOpen: false,
+      isRemoveUserModalOpen: false,
+      isCreateChatModalOpen: true,
       modalError: '',
     });
   }
@@ -250,6 +263,7 @@ export default class ChatsPage extends Block<ChatsPageProps> {
       chatMenuOpen: false,
       isAddUserModalOpen: false,
       isRemoveUserModalOpen: false,
+      isCreateChatModalOpen: false,
       modalError: '',
     });
     this.clearSearch();
@@ -276,6 +290,27 @@ export default class ChatsPage extends Block<ChatsPageProps> {
     await ChatsAPI.addUsersToChat([userId], response.id);
     await this.loadChats();
     this.openChat(response.id, title);
+  }
+
+  private getModalChatTitle(): string {
+    const input = this.refs.modalChatTitle;
+    if (!(input instanceof HTMLInputElement)) return '';
+    return input.value.trim();
+  }
+
+  private async handleCreateChatFromModal() {
+    const title = this.getModalChatTitle();
+    if (!title) {
+      this.setProps({ modalError: 'Введите название чата' });
+      return;
+    }
+
+    try {
+      await this.handleCreateChat(title);
+      this.closeUserModal();
+    } catch (error) {
+      this.setProps({ modalError: getApiErrorReason(error) });
+    }
   }
 
   private getModalLogin(): string {
@@ -380,6 +415,11 @@ export default class ChatsPage extends Block<ChatsPageProps> {
         return;
       }
 
+      if (action === 'open-create-chat') {
+        this.openCreateChatModal();
+        return;
+      }
+
       if (action === 'open-remove-user') {
         this.openRemoveUserModal();
         return;
@@ -397,6 +437,11 @@ export default class ChatsPage extends Block<ChatsPageProps> {
 
       if (action === 'submit-add-user') {
         void this.handleAddUserToActiveChat();
+        return;
+      }
+
+      if (action === 'submit-create-chat') {
+        void this.handleCreateChatFromModal();
         return;
       }
 

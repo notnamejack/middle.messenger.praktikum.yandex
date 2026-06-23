@@ -2,6 +2,9 @@
     <div class="container-message">
         <div class="chats">
             <div class="profile">
+                <button type="button" class="create-chat-btn" data-action="open-create-chat">
+                    Создать чат
+                </button>
                 <a href="/settings" class="link" data-link>Профиль</a>
             </div>
 
@@ -174,6 +177,34 @@
             {{/if}}
         </div>
     </div>
+
+    {{#if isCreateChatModalOpen}}
+        <div class="chat-modal-overlay">
+            <div class="chat-modal">
+                <button type="button" class="modal-close" data-action="close-modal" aria-label="Закрыть"></button>
+                <p class="chat-modal__title">Новый чат</p>
+
+                <label class="chat-modal__field">
+                    <span class="chat-modal__label">Название</span>
+                    <input
+                        ref="modalChatTitle"
+                        class="chat-modal__input"
+                        type="text"
+                        name="title"
+                        autocomplete="off"
+                    />
+                </label>
+
+                {{#if modalError}}
+                    <p class="chat-modal__error">{{modalError}}</p>
+                {{/if}}
+
+                <button type="button" class="btn chat-modal__submit" data-action="submit-create-chat">
+                    Создать
+                </button>
+            </div>
+        </div>
+    {{/if}}
 
     {{#if isAddUserModalOpen}}
         <div class="chat-modal-overlay">
