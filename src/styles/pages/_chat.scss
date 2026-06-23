@@ -111,7 +111,7 @@
 
           .user{
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 10px;
 
             .avatar{
@@ -120,6 +120,7 @@
               border-radius: 100%;
               background-color: $border;
               overflow: hidden;
+              flex-shrink: 0;
 
               img {
                 width: 100%;
@@ -133,6 +134,22 @@
                   background-repeat: no-repeat;
                   background-size: 14px;
               }
+
+              &--sm {
+                width: 24px;
+                height: 24px;
+
+                &.empty {
+                  background-size: 10px;
+                }
+              }
+            }
+
+            .user-info {
+              position: relative;
+              display: flex;
+              flex-direction: column;
+              gap: 2px;
             }
 
             .name{
@@ -141,6 +158,105 @@
               font-size: 13px;
               font-weight: 600;
               color: $text;
+            }
+
+            .participants-trigger {
+              border: none;
+              background: transparent;
+              padding: 0;
+              font-size: 11px;
+              font-weight: 500;
+              color: $desc;
+              cursor: pointer;
+              text-align: left;
+
+              &:hover {
+                color: $text;
+              }
+            }
+
+            .participants-dropdown {
+              position: absolute;
+              top: calc(100% + 8px);
+              left: 0;
+              z-index: 10;
+              min-width: 240px;
+              margin: 0;
+              padding: 0;
+              list-style: none;
+              background-color: $bg;
+              border-radius: 12px;
+              box-shadow: 0 0 20px $shadow;
+
+              &__item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+                padding: 8px 12px;
+                cursor: pointer;
+
+                &:first-child {
+                  border-top-left-radius: 12px;
+                  border-top-right-radius: 12px;
+                }
+
+                &:last-child {
+                  border-bottom-left-radius: 12px;
+                  border-bottom-right-radius: 12px;
+                }
+
+                &:hover {
+                  background-color: $grey;
+                }
+              }
+
+              &__user {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                min-width: 0;
+              }
+
+              &__name {
+                font-size: 12px;
+                font-weight: 500;
+                color: $text;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+              }
+
+              &__remove {
+                flex-shrink: 0;
+                width: 16px;
+                height: 16px;
+                border: none;
+                background: transparent;
+                cursor: pointer;
+                position: relative;
+
+                &::before,
+                &::after {
+                  content: '';
+                  position: absolute;
+                  top: 50%;
+                  left: 50%;
+                  width: 12px;
+                  height: 2px;
+                  background-color: $warning;
+                  transform: translate(-50%, -50%) rotate(45deg);
+                }
+
+                &::after {
+                  transform: translate(-50%, -50%) rotate(-45deg);
+                }
+
+                &:hover::before,
+                &:hover::after {
+                  opacity: 0.8;
+                }
+              }
             }
           }
 
@@ -174,7 +290,6 @@
             display: flex;
             flex-direction: column;
             min-width: 220px;
-            padding: 8px 0;
             background-color: $bg;
             border-radius: 12px;
             box-shadow: 0 0 20px $shadow;
@@ -193,6 +308,15 @@
               text-align: left;
               cursor: pointer;
 
+              &:first-child {
+                border-top-left-radius: 12px;
+                border-top-right-radius: 12px;
+              }
+
+              &:last-child {
+                border-bottom-left-radius: 12px;
+                border-bottom-right-radius: 12px;
+              }
               &:hover {
                 background-color: $grey;
               }
@@ -208,15 +332,28 @@
               box-sizing: border-box;
 
               &--add::before,
-              &--add::after,
-              &--remove::before,
-              &--remove::after {
+              &--add::after {
                 content: '';
                 position: absolute;
                 top: 50%;
                 left: 50%;
                 background-color: $accent;
                 transform: translate(-50%, -50%);
+              }
+
+              &--remove {
+                border-color: $warning;
+
+                &::before,
+                &::after {
+                  content: '';
+                  position: absolute;
+                  top: 50%;
+                  left: 50%;
+                  width: 8px;
+                  height: 2px;
+                  background-color: $warning;
+                }
               }
 
               &--add::before {
@@ -230,14 +367,10 @@
               }
 
               &--remove::before {
-                width: 8px;
-                height: 2px;
                 transform: translate(-50%, -50%) rotate(45deg);
               }
 
               &--remove::after {
-                width: 8px;
-                height: 2px;
                 transform: translate(-50%, -50%) rotate(-45deg);
               }
 
@@ -261,7 +394,7 @@
           display: flex;
           flex-direction: column;
           align-items: center;
-          justify-content: flex-end;
+          justify-content: center;
           gap: 30px;
           height: 100%;
           width: calc(100% - 40px);
@@ -270,9 +403,8 @@
           border-bottom: 1px solid $border;
           overflow: hidden;
 
-          .datetime p{
+          .body-empty {
             margin: 0;
-            padding: 0;
             font-size: 12px;
             font-weight: 500;
             color: $desc;
@@ -477,5 +609,51 @@
 
   &__submit {
     margin-top: 8px;
+  }
+
+  .out {
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    text-decoration: none;
+    margin: 0;
+    padding: 0;
+    color: $warning;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  &__text {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.4;
+    color: $desc;
+    text-align: center;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    margin-top: 8px;
+
+    .btn {
+      flex: 1;
+      width: auto;
+      padding: 12px 16px;
+      cursor: pointer;
+    }
+
+    &--stacked {
+      flex-direction: column;
+      align-items: center;
+
+      .btn {
+        width: 100%;
+        flex: none;
+        margin-top: 0;
+      }
+    }
   }
 }

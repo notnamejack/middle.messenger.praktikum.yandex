@@ -89,3 +89,5 @@ export type CreateChatResponse = {
 };
 
 export type ChatsResponse = ChatResponse[];
+
+export type ChatUsersResponse = UserResponse[];

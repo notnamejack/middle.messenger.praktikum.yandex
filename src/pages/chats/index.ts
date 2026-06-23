@@ -37,6 +37,13 @@ type SearchUserItem = {
 
 type SearchResultItem = SearchNewChatItem | SearchChatItem | SearchUserItem;
 
+type ChatParticipant = {
+  id: number;
+  name: string;
+  avatarUrl: string | null;
+  canRemove: boolean;
+};
+
 type ChatsPageProps = BlockOwnProps & {
   chats: ChatListItem[];
   searchQuery: string;
@@ -46,10 +53,12 @@ type ChatsPageProps = BlockOwnProps & {
   activeChatTitle: string;
   activeChatAvatarUrl: string | null;
   chatMenuOpen: boolean;
+  participantsOpen: boolean;
+  participants: ChatParticipant[];
   isAddUserModalOpen: boolean;
-  isRemoveUserModalOpen: boolean;
   isCreateChatModalOpen: boolean;
   isChatAvatarModalOpen: boolean;
+  isDeleteChatModalOpen: boolean;
   selectedChatAvatarName: string;
   isChatAvatarFileSelected: boolean;
   modalError: string;
@@ -81,6 +90,15 @@ function getUserDisplayName(user: UserResponse): string {
   return user.display_name || `${user.first_name} ${user.second_name}`;
 }
 
+function mapParticipant(user: UserResponse, currentUserId: number): ChatParticipant {
+  return {
+    id: user.id,
+    name: getUserDisplayName(user),
+    avatarUrl: getAvatarUrl(user.avatar),
+    canRemove: user.id !== currentUserId,
+  };
+}
+
 export default class ChatsPage extends Block<ChatsPageProps> {
   private currentUserId = 0;
 
@@ -104,10 +122,12 @@ export default class ChatsPage extends Block<ChatsPageProps> {
       activeChatTitle: '',
       activeChatAvatarUrl: null,
       chatMenuOpen: false,
+      participantsOpen: false,
+      participants: [],
       isAddUserModalOpen: false,
-      isRemoveUserModalOpen: false,
       isCreateChatModalOpen: false,
       isChatAvatarModalOpen: false,
+      isDeleteChatModalOpen: false,
       selectedChatAvatarName: '',
       isChatAvatarFileSelected: false,
       modalError: '',
@@ -132,11 +152,14 @@ export default class ChatsPage extends Block<ChatsPageProps> {
     this.setProps({ chatMenuOpen: false });
   }
 
+  private closeParticipants() {
+    this.setProps({ participantsOpen: false });
+  }
+
   private closeUserModal() {
     this.selectedChatAvatarFile = null;
     this.setProps({
       isAddUserModalOpen: false,
-      isRemoveUserModalOpen: false,
       isCreateChatModalOpen: false,
       isChatAvatarModalOpen: false,
       selectedChatAvatarName: '',
@@ -148,8 +171,8 @@ export default class ChatsPage extends Block<ChatsPageProps> {
   private openCreateChatModal() {
     this.setProps({
       chatMenuOpen: false,
+      participantsOpen: false,
       isAddUserModalOpen: false,
-      isRemoveUserModalOpen: false,
       isChatAvatarModalOpen: false,
       isCreateChatModalOpen: true,
       modalError: '',
@@ -160,8 +183,8 @@ export default class ChatsPage extends Block<ChatsPageProps> {
     this.selectedChatAvatarFile = null;
     this.setProps({
       chatMenuOpen: false,
+      participantsOpen: false,
       isAddUserModalOpen: false,
-      isRemoveUserModalOpen: false,
       isCreateChatModalOpen: false,
       isChatAvatarModalOpen: true,
       selectedChatAvatarName: '',
@@ -173,21 +196,24 @@ export default class ChatsPage extends Block<ChatsPageProps> {
   private openAddUserModal() {
     this.setProps({
       chatMenuOpen: false,
+      participantsOpen: false,
       isAddUserModalOpen: true,
-      isRemoveUserModalOpen: false,
       isChatAvatarModalOpen: false,
+      isDeleteChatModalOpen: false,
       modalError: '',
     });
   }
 
-  private openRemoveUserModal() {
+  private openDeleteChatModal() {
     this.setProps({
       chatMenuOpen: false,
-      isAddUserModalOpen: false,
-      isRemoveUserModalOpen: true,
-      isChatAvatarModalOpen: false,
-      modalError: '',
+      participantsOpen: false,
+      isDeleteChatModalOpen: true,
     });
+  }
+
+  private closeDeleteChatModal() {
+    this.setProps({ isDeleteChatModalOpen: false });
   }
 
   private syncSearchInput(query: string) {
@@ -297,15 +323,31 @@ export default class ChatsPage extends Block<ChatsPageProps> {
       activeChatAvatarUrl: chat?.avatarUrl ?? null,
       chats: this.withActiveChats(this.allChats),
       chatMenuOpen: false,
+      participantsOpen: false,
+      participants: [],
       isAddUserModalOpen: false,
-      isRemoveUserModalOpen: false,
       isCreateChatModalOpen: false,
       isChatAvatarModalOpen: false,
+      isDeleteChatModalOpen: false,
       selectedChatAvatarName: '',
       isChatAvatarFileSelected: false,
       modalError: '',
     });
     this.clearSearch();
+    void this.loadParticipants(id);
+  }
+
+  private async loadParticipants(chatId: number) {
+    try {
+      const users = await ChatsAPI.getChatUsers(chatId);
+      if (this.props.activeChatId !== chatId) return;
+
+      this.setProps({
+        participants: users.map((user) => mapParticipant(user, this.currentUserId)),
+      });
+    } catch (error) {
+      alert(getApiErrorReason(error));
+    }
   }
 
   private async handleCreateChat(title: string) {
@@ -408,33 +450,42 @@ export default class ChatsPage extends Block<ChatsPageProps> {
       await ChatsAPI.addUsersToChat([user.id], chatId);
       this.closeUserModal();
       await this.loadChats();
+      await this.loadParticipants(chatId);
     } catch (error) {
       this.setProps({ modalError: getApiErrorReason(error) });
     }
   }
 
-  private async handleRemoveUserFromActiveChat() {
+  private async handleRemoveParticipant(userId: number) {
     const chatId = this.props.activeChatId;
     if (!chatId) return;
 
-    const login = this.getModalLogin();
-    if (!login) {
-      this.setProps({ modalError: 'Введите логин' });
-      return;
-    }
-
     try {
-      const user = await this.findUserByLogin(login);
-      if (!user) {
-        this.setProps({ modalError: 'Пользователь не найден' });
-        return;
-      }
-
-      await ChatsAPI.removeUsersFromChat([user.id], chatId);
-      this.closeUserModal();
+      await ChatsAPI.removeUsersFromChat([userId], chatId);
+      await this.loadParticipants(chatId);
       await this.loadChats();
     } catch (error) {
-      this.setProps({ modalError: getApiErrorReason(error) });
+      alert(getApiErrorReason(error));
+    }
+  }
+
+  private async handleDeleteChat() {
+    const chatId = this.props.activeChatId;
+    if (!chatId) return;
+
+    try {
+      await ChatsAPI.deleteChat(chatId);
+      this.closeDeleteChatModal();
+      this.setProps({
+        activeChatId: null,
+        activeChatTitle: '',
+        activeChatAvatarUrl: null,
+        participantsOpen: false,
+        participants: [],
+      });
+      await this.loadChats();
+    } catch (error) {
+      alert(getApiErrorReason(error));
     }
   }
 
@@ -481,7 +532,26 @@ export default class ChatsPage extends Block<ChatsPageProps> {
       const action = actionEl?.dataset.action;
 
       if (action === 'toggle-chat-menu') {
-        this.setProps({ chatMenuOpen: !this.props.chatMenuOpen });
+        this.setProps({
+          chatMenuOpen: !this.props.chatMenuOpen,
+          participantsOpen: false,
+        });
+        return;
+      }
+
+      if (action === 'toggle-participants') {
+        this.setProps({
+          chatMenuOpen: false,
+          participantsOpen: !this.props.participantsOpen,
+        });
+        return;
+      }
+
+      if (action === 'remove-participant') {
+        const userId = Number(actionEl?.dataset.userId);
+        if (!Number.isNaN(userId)) {
+          void this.handleRemoveParticipant(userId);
+        }
         return;
       }
 
@@ -495,13 +565,23 @@ export default class ChatsPage extends Block<ChatsPageProps> {
         return;
       }
 
-      if (action === 'open-remove-user') {
-        this.openRemoveUserModal();
+      if (action === 'open-chat-avatar') {
+        this.openChatAvatarModal();
         return;
       }
 
-      if (action === 'open-chat-avatar') {
-        this.openChatAvatarModal();
+      if (action === 'delete-chat') {
+        this.openDeleteChatModal();
+        return;
+      }
+
+      if (action === 'confirm-delete-chat') {
+        void this.handleDeleteChat();
+        return;
+      }
+
+      if (action === 'close-delete-modal') {
+        this.closeDeleteChatModal();
         return;
       }
 
@@ -522,6 +602,10 @@ export default class ChatsPage extends Block<ChatsPageProps> {
       }
 
       if (target.classList.contains('chat-modal-overlay')) {
+        if (this.props.isDeleteChatModalOpen) {
+          this.closeDeleteChatModal();
+          return;
+        }
         this.closeUserModal();
         return;
       }
@@ -536,13 +620,12 @@ export default class ChatsPage extends Block<ChatsPageProps> {
         return;
       }
 
-      if (action === 'submit-remove-user') {
-        void this.handleRemoveUserFromActiveChat();
-        return;
-      }
-
       if (this.props.chatMenuOpen && !target.closest('.setting-wrap')) {
         this.closeChatMenu();
+      }
+
+      if (this.props.participantsOpen && !target.closest('.participants-wrap')) {
+        this.closeParticipants();
       }
 
       const chatItem = target.closest<HTMLElement>('[data-chat-id]');
