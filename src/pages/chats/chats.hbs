@@ -2,6 +2,9 @@
     <div class="container-message">
         <div class="chats">
             <div class="profile">
+                <button type="button" class="create-chat-btn" data-action="open-create-chat">
+                    Создать чат
+                </button>
                 <a href="/settings" class="link" data-link>Профиль</a>
             </div>
 
@@ -39,7 +42,11 @@
                                 data-id="{{id}}"
                                 data-title="{{name}}"
                             >
-                                <div class="avatar empty"></div>
+                                <div class="avatar{{#unless avatarUrl}} empty{{/unless}}">
+                                    {{#if avatarUrl}}
+                                        <img src="{{avatarUrl}}" alt="" />
+                                    {{/if}}
+                                </div>
                                 <div class="message">
                                     <p class="name">{{name}}</p>
                                     <p class="text-message">
@@ -83,6 +90,7 @@
                             count=count
                             prefix=prefix
                             active=active
+                            avatarUrl=avatarUrl
                         }}}
                     {{else}}
                         <li class="item empty">
@@ -101,9 +109,48 @@
             {{#if activeChatId}}
                 <div class="chat-item">
                     <div class="header">
-                        <div class="user">
-                            <div class="avatar empty"></div>
-                            <p class="name">{{activeChatTitle}}</p>
+                        <div class="user participants-wrap">
+                            <div class="avatar{{#unless activeChatAvatarUrl}} empty{{/unless}}">
+                                {{#if activeChatAvatarUrl}}
+                                    <img src="{{activeChatAvatarUrl}}" alt="" />
+                                {{/if}}
+                            </div>
+                            <div class="user-info">
+                                <p class="name">{{activeChatTitle}}</p>
+                                <button
+                                    type="button"
+                                    class="participants-trigger"
+                                    data-action="toggle-participants"
+                                >
+                                    Участники: {{participants.length}}
+                                </button>
+
+                                {{#if participantsOpen}}
+                                    <ul class="participants-dropdown">
+                                        {{#each participants}}
+                                            <li class="participants-dropdown__item">
+                                                <div class="participants-dropdown__user">
+                                                    <div class="avatar avatar--sm{{#unless avatarUrl}} empty{{/unless}}">
+                                                        {{#if avatarUrl}}
+                                                            <img src="{{avatarUrl}}" alt="" />
+                                                        {{/if}}
+                                                    </div>
+                                                    <span class="participants-dropdown__name">{{name}}</span>
+                                                </div>
+                                                {{#if canRemove}}
+                                                    <button
+                                                        type="button"
+                                                        class="participants-dropdown__remove"
+                                                        data-action="remove-participant"
+                                                        data-user-id="{{id}}"
+                                                        aria-label="Удалить {{name}}"
+                                                    ></button>
+                                                {{/if}}
+                                            </li>
+                                        {{/each}}
+                                    </ul>
+                                {{/if}}
+                            </div>
                         </div>
 
                         <div class="setting-wrap">
@@ -123,6 +170,18 @@
                                     <button
                                         type="button"
                                         class="chat-menu__item"
+                                        data-action="open-chat-avatar"
+                                    >
+                                        <span class="chat-menu__icon chat-menu__icon--avatar">
+                                            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path fill-rule="evenodd" clip-rule="evenodd" d="M4 1.5H18C19.3807 1.5 20.5 2.61929 20.5 4V14L14.5194 12.4052C13.5108 12.1362 12.4714 12 11.4275 12H10.5725C9.52864 12 8.48921 12.1362 7.48057 12.4052L1.5 14V4C1.5 2.61929 2.61929 1.5 4 1.5ZM0 4C0 1.79086 1.79086 0 4 0H18C20.2091 0 22 1.79086 22 4V18C22 20.2091 20.2091 22 18 22H4C1.79086 22 0 20.2091 0 18V4ZM8 6C8 7.10457 7.10457 8 6 8C4.89543 8 4 7.10457 4 6C4 4.89543 4.89543 4 6 4C7.10457 4 8 4.89543 8 6Z" fill="#3369F3"/>
+                                            </svg>
+                                        </span>
+                                        Изменить фото чата
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="chat-menu__item"
                                         data-action="open-add-user"
                                     >
                                         <span class="chat-menu__icon chat-menu__icon--add"></span>
@@ -131,10 +190,10 @@
                                     <button
                                         type="button"
                                         class="chat-menu__item"
-                                        data-action="open-remove-user"
+                                        data-action="delete-chat"
                                     >
                                         <span class="chat-menu__icon chat-menu__icon--remove"></span>
-                                        Удалить пользователя
+                                        Удалить чат
                                     </button>
                                 </div>
                             {{/if}}
@@ -142,9 +201,7 @@
                     </div>
 
                     <div class="body">
-                        <div class="datetime">
-                            <p></p>
-                        </div>
+                        <p class="desc body-empty">Нет сообщений. Напишите первое.</p>
 
                         {{!-- sprint 4: WebSocket — лента сообщений
                         <div class="message-list">
@@ -161,6 +218,14 @@
                     </div>
 
                     <div class="footer">
+                        <input
+                            ref="chatAvatar"
+                            type="file"
+                            name="chatAvatar"
+                            accept="image/*"
+                            class="chat-avatar-input"
+                            hidden
+                        />
                         <button type="button" class="btn-file"></button>
                         <input
                             type="text"
@@ -175,9 +240,64 @@
         </div>
     </div>
 
+    {{#if isChatAvatarModalOpen}}
+        <div class="chat-modal-overlay">
+            <div class="chat-modal">
+                <button type="button" class="modal-close" data-action="close-modal" aria-label="Закрыть"></button>
+
+                {{#if isChatAvatarFileSelected}}
+                    <p class="chat-modal__title">Файл загружен</p>
+                    <p class="chat-modal__filename">{{selectedChatAvatarName}}</p>
+                {{else}}
+                    <p class="chat-modal__title">Загрузите файл</p>
+                    <button type="button" class="chat-modal__link" data-action="pick-chat-avatar">
+                        Выбрать файл на компьютере
+                    </button>
+                {{/if}}
+
+                {{#if modalError}}
+                    <p class="chat-modal__error">{{modalError}}</p>
+                {{/if}}
+
+                <button type="button" class="btn chat-modal__submit" data-action="upload-chat-avatar">
+                    Поменять
+                </button>
+            </div>
+        </div>
+    {{/if}}
+
+    {{#if isCreateChatModalOpen}}
+        <div class="chat-modal-overlay">
+            <div class="chat-modal">
+                <button type="button" class="modal-close" data-action="close-modal" aria-label="Закрыть"></button>
+                <p class="chat-modal__title">Новый чат</p>
+
+                <label class="chat-modal__field">
+                    <span class="chat-modal__label">Название</span>
+                    <input
+                        ref="modalChatTitle"
+                        class="chat-modal__input"
+                        type="text"
+                        name="title"
+                        autocomplete="off"
+                    />
+                </label>
+
+                {{#if modalError}}
+                    <p class="chat-modal__error">{{modalError}}</p>
+                {{/if}}
+
+                <button type="button" class="btn chat-modal__submit" data-action="submit-create-chat">
+                    Создать
+                </button>
+            </div>
+        </div>
+    {{/if}}
+
     {{#if isAddUserModalOpen}}
         <div class="chat-modal-overlay">
             <div class="chat-modal">
+                <button type="button" class="modal-close" data-action="close-modal" aria-label="Закрыть"></button>
                 <p class="chat-modal__title">Добавить пользователя</p>
 
                 <label class="chat-modal__field">
@@ -202,29 +322,23 @@
         </div>
     {{/if}}
 
-    {{#if isRemoveUserModalOpen}}
+    {{#if isDeleteChatModalOpen}}
         <div class="chat-modal-overlay">
             <div class="chat-modal">
-                <p class="chat-modal__title">Удалить пользователя</p>
+                <button type="button" class="modal-close" data-action="close-delete-modal" aria-label="Закрыть"></button>
+                <p class="chat-modal__title">Удалить группу</p>
+                <p class="chat-modal__text">
+                    Чат «{{activeChatTitle}}» будет удалён без возможности восстановления.
+                </p>
 
-                <label class="chat-modal__field">
-                    <span class="chat-modal__label">Логин</span>
-                    <input
-                        ref="modalLogin"
-                        class="chat-modal__input"
-                        type="text"
-                        name="login"
-                        autocomplete="off"
-                    />
-                </label>
-
-                {{#if modalError}}
-                    <p class="chat-modal__error">{{modalError}}</p>
-                {{/if}}
-
-                <button type="button" class="btn chat-modal__submit" data-action="submit-remove-user">
-                    Удалить
-                </button>
+                <div class="chat-modal__actions chat-modal__actions--stacked">
+                    <button type="button" class="btn chat-modal__submit" data-action="close-delete-modal">
+                        Отмена
+                    </button>
+                    <button type="button" class="out" data-action="confirm-delete-chat">
+                        Удалить
+                    </button>
+                </div>
             </div>
         </div>
     {{/if}}

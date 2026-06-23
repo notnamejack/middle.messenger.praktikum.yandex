@@ -58,6 +58,7 @@
     {{#if isAvatarModalOpen}}
         <div class="avatar-modal-overlay">
             <div class="avatar-modal">
+                <button type="button" class="modal-close" data-action="close-modal" aria-label="Закрыть"></button>
                 {{#if isAvatarFileSelected}}
                     <p class="avatar-modal__title">Файл загружен</p>
                     <p class="avatar-modal__filename">{{selectedAvatarName}}</p>

@@ -3,7 +3,11 @@
     data-chat-id="{{id}}"
     data-title="{{name}}"
 >
-  <div class="avatar empty"></div>
+  <div class="avatar{{#unless avatarUrl}} empty{{/unless}}">
+    {{#if avatarUrl}}
+      <img src="{{avatarUrl}}" alt="" />
+    {{/if}}
+  </div>
   <div class="message">
     <p class="name">{{name}}</p>
     <p class="text-message">{{#if prefix}}<span>{{prefix}}</span>{{/if}}{{text}}</p>

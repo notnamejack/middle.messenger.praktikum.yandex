@@ -9,6 +9,7 @@ export type ChatItemProps = BlockOwnProps & {
   time: string;
   count?: number;
   prefix?: string;
+  avatarUrl?: string | null;
 };
 
 export default class ChatItem extends Block<ChatItemProps> {

@@ -1,6 +1,6 @@
 import { HTTPTransport } from '../core/HTTPTransport';
 import { API_BASE } from './constants';
-import type { ChatDeleteRequest, ChatResponse, ChatsResponse, CreateChatResponse, UsersRequest } from '../types/api';
+import type { ChatDeleteRequest, ChatResponse, ChatsResponse, ChatUsersResponse, CreateChatResponse, UsersRequest } from '../types/api';
 
 const http = new HTTPTransport();
 
@@ -16,5 +16,13 @@ export const ChatsAPI = {
     http.post(`${API_BASE}/chats`, { data: { title } }).then(JSON.parse),
   getCommonChat: (userId: number): Promise<ChatResponse> =>
     http.get(`${API_BASE}/chats/${userId}/common`).then(JSON.parse),
+  getChatUsers: (chatId: number): Promise<ChatUsersResponse> =>
+    http.get(`${API_BASE}/chats/${chatId}/users`).then(JSON.parse),
+  uploadAvatar: (chatId: number, file: File) => {
+    const formData = new FormData();
+    formData.append('chatId', String(chatId));
+    formData.append('avatar', file);
+    return http.put(`${API_BASE}/chats/avatar`, { data: formData, isFormData: true });
+  },
 };
 

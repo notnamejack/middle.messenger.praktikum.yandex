@@ -15,6 +15,7 @@ type ChatListItem = {
   count?: number;
   prefix?: string;
   active?: boolean;
+  avatarUrl: string | null;
 };
 
 type SearchNewChatItem = {
@@ -36,6 +37,13 @@ type SearchUserItem = {
 
 type SearchResultItem = SearchNewChatItem | SearchChatItem | SearchUserItem;
 
+type ChatParticipant = {
+  id: number;
+  name: string;
+  avatarUrl: string | null;
+  canRemove: boolean;
+};
+
 type ChatsPageProps = BlockOwnProps & {
   chats: ChatListItem[];
   searchQuery: string;
@@ -43,9 +51,16 @@ type ChatsPageProps = BlockOwnProps & {
   searchResults: SearchResultItem[];
   activeChatId: number | null;
   activeChatTitle: string;
+  activeChatAvatarUrl: string | null;
   chatMenuOpen: boolean;
+  participantsOpen: boolean;
+  participants: ChatParticipant[];
   isAddUserModalOpen: boolean;
-  isRemoveUserModalOpen: boolean;
+  isCreateChatModalOpen: boolean;
+  isChatAvatarModalOpen: boolean;
+  isDeleteChatModalOpen: boolean;
+  selectedChatAvatarName: string;
+  isChatAvatarFileSelected: boolean;
   modalError: string;
 };
 
@@ -67,6 +82,7 @@ function mapChat(chat: ChatResponse, currentUserId: number): ChatListItem {
     time: last ? formatTime(last.time) : '',
     count: chat.unread_count > 0 ? chat.unread_count : undefined,
     prefix: isMine ? 'Вы: ' : undefined,
+    avatarUrl: getAvatarUrl(chat.avatar),
   };
 }
 
@@ -74,10 +90,21 @@ function getUserDisplayName(user: UserResponse): string {
   return user.display_name || `${user.first_name} ${user.second_name}`;
 }
 
+function mapParticipant(user: UserResponse, currentUserId: number): ChatParticipant {
+  return {
+    id: user.id,
+    name: getUserDisplayName(user),
+    avatarUrl: getAvatarUrl(user.avatar),
+    canRemove: user.id !== currentUserId,
+  };
+}
+
 export default class ChatsPage extends Block<ChatsPageProps> {
   private currentUserId = 0;
 
   private allChats: ChatListItem[] = [];
+
+  private selectedChatAvatarFile: File | null = null;
 
   private searchTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -93,9 +120,16 @@ export default class ChatsPage extends Block<ChatsPageProps> {
       searchResults: [],
       activeChatId: null,
       activeChatTitle: '',
+      activeChatAvatarUrl: null,
       chatMenuOpen: false,
+      participantsOpen: false,
+      participants: [],
       isAddUserModalOpen: false,
-      isRemoveUserModalOpen: false,
+      isCreateChatModalOpen: false,
+      isChatAvatarModalOpen: false,
+      isDeleteChatModalOpen: false,
+      selectedChatAvatarName: '',
+      isChatAvatarFileSelected: false,
       modalError: '',
     });
   }
@@ -118,10 +152,43 @@ export default class ChatsPage extends Block<ChatsPageProps> {
     this.setProps({ chatMenuOpen: false });
   }
 
+  private closeParticipants() {
+    this.setProps({ participantsOpen: false });
+  }
+
   private closeUserModal() {
+    this.selectedChatAvatarFile = null;
     this.setProps({
       isAddUserModalOpen: false,
-      isRemoveUserModalOpen: false,
+      isCreateChatModalOpen: false,
+      isChatAvatarModalOpen: false,
+      selectedChatAvatarName: '',
+      isChatAvatarFileSelected: false,
+      modalError: '',
+    });
+  }
+
+  private openCreateChatModal() {
+    this.setProps({
+      chatMenuOpen: false,
+      participantsOpen: false,
+      isAddUserModalOpen: false,
+      isChatAvatarModalOpen: false,
+      isCreateChatModalOpen: true,
+      modalError: '',
+    });
+  }
+
+  private openChatAvatarModal() {
+    this.selectedChatAvatarFile = null;
+    this.setProps({
+      chatMenuOpen: false,
+      participantsOpen: false,
+      isAddUserModalOpen: false,
+      isCreateChatModalOpen: false,
+      isChatAvatarModalOpen: true,
+      selectedChatAvatarName: '',
+      isChatAvatarFileSelected: false,
       modalError: '',
     });
   }
@@ -129,19 +196,24 @@ export default class ChatsPage extends Block<ChatsPageProps> {
   private openAddUserModal() {
     this.setProps({
       chatMenuOpen: false,
+      participantsOpen: false,
       isAddUserModalOpen: true,
-      isRemoveUserModalOpen: false,
+      isChatAvatarModalOpen: false,
+      isDeleteChatModalOpen: false,
       modalError: '',
     });
   }
 
-  private openRemoveUserModal() {
+  private openDeleteChatModal() {
     this.setProps({
       chatMenuOpen: false,
-      isAddUserModalOpen: false,
-      isRemoveUserModalOpen: true,
-      modalError: '',
+      participantsOpen: false,
+      isDeleteChatModalOpen: true,
     });
+  }
+
+  private closeDeleteChatModal() {
+    this.setProps({ isDeleteChatModalOpen: false });
   }
 
   private syncSearchInput(query: string) {
@@ -243,16 +315,39 @@ export default class ChatsPage extends Block<ChatsPageProps> {
   }
 
   private openChat(id: number, title: string) {
+    const chat = this.allChats.find((item) => item.id === id);
+
     this.setProps({
       activeChatId: id,
       activeChatTitle: title,
+      activeChatAvatarUrl: chat?.avatarUrl ?? null,
       chats: this.withActiveChats(this.allChats),
       chatMenuOpen: false,
+      participantsOpen: false,
+      participants: [],
       isAddUserModalOpen: false,
-      isRemoveUserModalOpen: false,
+      isCreateChatModalOpen: false,
+      isChatAvatarModalOpen: false,
+      isDeleteChatModalOpen: false,
+      selectedChatAvatarName: '',
+      isChatAvatarFileSelected: false,
       modalError: '',
     });
     this.clearSearch();
+    void this.loadParticipants(id);
+  }
+
+  private async loadParticipants(chatId: number) {
+    try {
+      const users = await ChatsAPI.getChatUsers(chatId);
+      if (this.props.activeChatId !== chatId) return;
+
+      this.setProps({
+        participants: users.map((user) => mapParticipant(user, this.currentUserId)),
+      });
+    } catch (error) {
+      alert(getApiErrorReason(error));
+    }
   }
 
   private async handleCreateChat(title: string) {
@@ -276,6 +371,47 @@ export default class ChatsPage extends Block<ChatsPageProps> {
     await ChatsAPI.addUsersToChat([userId], response.id);
     await this.loadChats();
     this.openChat(response.id, title);
+  }
+
+  private async handleUploadChatAvatar() {
+    const chatId = this.props.activeChatId;
+    if (!chatId) return;
+
+    if (!this.selectedChatAvatarFile) {
+      this.setProps({ modalError: 'Нужно выбрать файл' });
+      return;
+    }
+
+    try {
+      await ChatsAPI.uploadAvatar(chatId, this.selectedChatAvatarFile);
+      const title = this.props.activeChatTitle;
+      this.closeUserModal();
+      await this.loadChats();
+      this.openChat(chatId, title);
+    } catch (error) {
+      this.setProps({ modalError: getApiErrorReason(error) });
+    }
+  }
+
+  private getModalChatTitle(): string {
+    const input = this.refs.modalChatTitle;
+    if (!(input instanceof HTMLInputElement)) return '';
+    return input.value.trim();
+  }
+
+  private async handleCreateChatFromModal() {
+    const title = this.getModalChatTitle();
+    if (!title) {
+      this.setProps({ modalError: 'Введите название чата' });
+      return;
+    }
+
+    try {
+      await this.handleCreateChat(title);
+      this.closeUserModal();
+    } catch (error) {
+      this.setProps({ modalError: getApiErrorReason(error) });
+    }
   }
 
   private getModalLogin(): string {
@@ -314,37 +450,62 @@ export default class ChatsPage extends Block<ChatsPageProps> {
       await ChatsAPI.addUsersToChat([user.id], chatId);
       this.closeUserModal();
       await this.loadChats();
+      await this.loadParticipants(chatId);
     } catch (error) {
       this.setProps({ modalError: getApiErrorReason(error) });
     }
   }
 
-  private async handleRemoveUserFromActiveChat() {
+  private async handleRemoveParticipant(userId: number) {
     const chatId = this.props.activeChatId;
     if (!chatId) return;
 
-    const login = this.getModalLogin();
-    if (!login) {
-      this.setProps({ modalError: 'Введите логин' });
-      return;
-    }
-
     try {
-      const user = await this.findUserByLogin(login);
-      if (!user) {
-        this.setProps({ modalError: 'Пользователь не найден' });
-        return;
-      }
-
-      await ChatsAPI.removeUsersFromChat([user.id], chatId);
-      this.closeUserModal();
+      await ChatsAPI.removeUsersFromChat([userId], chatId);
+      await this.loadParticipants(chatId);
       await this.loadChats();
     } catch (error) {
-      this.setProps({ modalError: getApiErrorReason(error) });
+      alert(getApiErrorReason(error));
+    }
+  }
+
+  private async handleDeleteChat() {
+    const chatId = this.props.activeChatId;
+    if (!chatId) return;
+
+    try {
+      await ChatsAPI.deleteChat(chatId);
+      this.closeDeleteChatModal();
+      this.setProps({
+        activeChatId: null,
+        activeChatTitle: '',
+        activeChatAvatarUrl: null,
+        participantsOpen: false,
+        participants: [],
+      });
+      await this.loadChats();
+    } catch (error) {
+      alert(getApiErrorReason(error));
     }
   }
 
   protected events = {
+    change: (event: Event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement) || target.name !== 'chatAvatar') return;
+
+      const file = target.files?.[0];
+      if (!file) return;
+
+      this.selectedChatAvatarFile = file;
+      this.setProps({
+        selectedChatAvatarName: file.name,
+        isChatAvatarFileSelected: true,
+        modalError: '',
+      });
+      target.value = '';
+    },
+
     input: (event: Event) => {
       const target = event.target;
       if (!(target instanceof HTMLInputElement) || target.name !== 'search') return;
@@ -371,7 +532,26 @@ export default class ChatsPage extends Block<ChatsPageProps> {
       const action = actionEl?.dataset.action;
 
       if (action === 'toggle-chat-menu') {
-        this.setProps({ chatMenuOpen: !this.props.chatMenuOpen });
+        this.setProps({
+          chatMenuOpen: !this.props.chatMenuOpen,
+          participantsOpen: false,
+        });
+        return;
+      }
+
+      if (action === 'toggle-participants') {
+        this.setProps({
+          chatMenuOpen: false,
+          participantsOpen: !this.props.participantsOpen,
+        });
+        return;
+      }
+
+      if (action === 'remove-participant') {
+        const userId = Number(actionEl?.dataset.userId);
+        if (!Number.isNaN(userId)) {
+          void this.handleRemoveParticipant(userId);
+        }
         return;
       }
 
@@ -380,12 +560,52 @@ export default class ChatsPage extends Block<ChatsPageProps> {
         return;
       }
 
-      if (action === 'open-remove-user') {
-        this.openRemoveUserModal();
+      if (action === 'open-create-chat') {
+        this.openCreateChatModal();
+        return;
+      }
+
+      if (action === 'open-chat-avatar') {
+        this.openChatAvatarModal();
+        return;
+      }
+
+      if (action === 'delete-chat') {
+        this.openDeleteChatModal();
+        return;
+      }
+
+      if (action === 'confirm-delete-chat') {
+        void this.handleDeleteChat();
+        return;
+      }
+
+      if (action === 'close-delete-modal') {
+        this.closeDeleteChatModal();
+        return;
+      }
+
+      if (action === 'pick-chat-avatar') {
+        const input = this.refs.chatAvatar;
+        if (input instanceof HTMLInputElement) input.click();
+        return;
+      }
+
+      if (action === 'upload-chat-avatar') {
+        void this.handleUploadChatAvatar();
+        return;
+      }
+
+      if (action === 'close-modal') {
+        this.closeUserModal();
         return;
       }
 
       if (target.classList.contains('chat-modal-overlay')) {
+        if (this.props.isDeleteChatModalOpen) {
+          this.closeDeleteChatModal();
+          return;
+        }
         this.closeUserModal();
         return;
       }
@@ -395,13 +615,17 @@ export default class ChatsPage extends Block<ChatsPageProps> {
         return;
       }
 
-      if (action === 'submit-remove-user') {
-        void this.handleRemoveUserFromActiveChat();
+      if (action === 'submit-create-chat') {
+        void this.handleCreateChatFromModal();
         return;
       }
 
       if (this.props.chatMenuOpen && !target.closest('.setting-wrap')) {
         this.closeChatMenu();
+      }
+
+      if (this.props.participantsOpen && !target.closest('.participants-wrap')) {
+        this.closeParticipants();
       }
 
       const chatItem = target.closest<HTMLElement>('[data-chat-id]');

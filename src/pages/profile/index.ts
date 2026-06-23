@@ -305,6 +305,11 @@ export default class ProfilePage extends Block<ProfilePageProps> {
         return;
       }
 
+      if (action === 'close-modal') {
+        this.closeAvatarModal();
+        return;
+      }
+
       if (action === 'upload-avatar') {
         if (!this.selectedAvatarFile) {
           this.setProps({
