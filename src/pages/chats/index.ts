@@ -15,6 +15,7 @@ type ChatListItem = {
   count?: number;
   prefix?: string;
   active?: boolean;
+  avatarUrl: string | null;
 };
 
 type SearchNewChatItem = {
@@ -43,6 +44,7 @@ type ChatsPageProps = BlockOwnProps & {
   searchResults: SearchResultItem[];
   activeChatId: number | null;
   activeChatTitle: string;
+  activeChatAvatarUrl: string | null;
   chatMenuOpen: boolean;
   isAddUserModalOpen: boolean;
   isRemoveUserModalOpen: boolean;
@@ -68,6 +70,7 @@ function mapChat(chat: ChatResponse, currentUserId: number): ChatListItem {
     time: last ? formatTime(last.time) : '',
     count: chat.unread_count > 0 ? chat.unread_count : undefined,
     prefix: isMine ? 'Вы: ' : undefined,
+    avatarUrl: getAvatarUrl(chat.avatar),
   };
 }
 
@@ -94,6 +97,7 @@ export default class ChatsPage extends Block<ChatsPageProps> {
       searchResults: [],
       activeChatId: null,
       activeChatTitle: '',
+      activeChatAvatarUrl: null,
       chatMenuOpen: false,
       isAddUserModalOpen: false,
       isRemoveUserModalOpen: false,
@@ -256,9 +260,12 @@ export default class ChatsPage extends Block<ChatsPageProps> {
   }
 
   private openChat(id: number, title: string) {
+    const chat = this.allChats.find((item) => item.id === id);
+
     this.setProps({
       activeChatId: id,
       activeChatTitle: title,
+      activeChatAvatarUrl: chat?.avatarUrl ?? null,
       chats: this.withActiveChats(this.allChats),
       chatMenuOpen: false,
       isAddUserModalOpen: false,

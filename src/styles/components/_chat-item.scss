@@ -18,13 +18,6 @@
         .search-item__hint {
         color: $desc;
         }
-
-        .avatar img {
-        width: 100%;
-        height: 100%;
-        border-radius: 100%;
-        object-fit: cover;
-        }
     }
 
     &:not(:last-child)::after{
@@ -60,6 +53,13 @@
         height: 47px;
         border-radius: 100%;
         background-color: $border;
+        overflow: hidden;
+
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
 
         &.empty{
             background-image: url("../../assets/unphoto.svg");

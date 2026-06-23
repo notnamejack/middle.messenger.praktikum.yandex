@@ -42,7 +42,11 @@
                                 data-id="{{id}}"
                                 data-title="{{name}}"
                             >
-                                <div class="avatar empty"></div>
+                                <div class="avatar{{#unless avatarUrl}} empty{{/unless}}">
+                                    {{#if avatarUrl}}
+                                        <img src="{{avatarUrl}}" alt="" />
+                                    {{/if}}
+                                </div>
                                 <div class="message">
                                     <p class="name">{{name}}</p>
                                     <p class="text-message">
@@ -86,6 +90,7 @@
                             count=count
                             prefix=prefix
                             active=active
+                            avatarUrl=avatarUrl
                         }}}
                     {{else}}
                         <li class="item empty">
@@ -105,7 +110,11 @@
                 <div class="chat-item">
                     <div class="header">
                         <div class="user">
-                            <div class="avatar empty"></div>
+                            <div class="avatar{{#unless activeChatAvatarUrl}} empty{{/unless}}">
+                                {{#if activeChatAvatarUrl}}
+                                    <img src="{{activeChatAvatarUrl}}" alt="" />
+                                {{/if}}
+                            </div>
                             <p class="name">{{activeChatTitle}}</p>
                         </div>
 
