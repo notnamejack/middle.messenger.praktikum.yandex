@@ -16,5 +16,11 @@ export const ChatsAPI = {
     http.post(`${API_BASE}/chats`, { data: { title } }).then(JSON.parse),
   getCommonChat: (userId: number): Promise<ChatResponse> =>
     http.get(`${API_BASE}/chats/${userId}/common`).then(JSON.parse),
+  uploadAvatar: (chatId: number, file: File) => {
+    const formData = new FormData();
+    formData.append('chatId', String(chatId));
+    formData.append('avatar', file);
+    return http.put(`${API_BASE}/chats/avatar`, { data: formData, isFormData: true });
+  },
 };
 

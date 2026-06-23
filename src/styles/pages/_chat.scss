@@ -240,6 +240,19 @@
                 height: 2px;
                 transform: translate(-50%, -50%) rotate(-45deg);
               }
+
+              &--avatar {
+                width: 22px;
+                height: 22px;
+                border: none;
+                border-radius: 0;
+
+                svg {
+                  display: block;
+                  width: 22px;
+                  height: 22px;
+                }
+              }
             }
           }
         }
@@ -443,6 +456,23 @@
     font-size: 12px;
     color: $warning;
     text-align: center;
+  }
+
+  &__filename {
+    margin: 0;
+    font-size: 13px;
+    color: $desc;
+    text-align: center;
+  }
+
+  &__link {
+    border: none;
+    background: none;
+    padding: 0;
+    color: $accent;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
   }
 
   &__submit {

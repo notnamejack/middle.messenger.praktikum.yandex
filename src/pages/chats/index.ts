@@ -49,6 +49,9 @@ type ChatsPageProps = BlockOwnProps & {
   isAddUserModalOpen: boolean;
   isRemoveUserModalOpen: boolean;
   isCreateChatModalOpen: boolean;
+  isChatAvatarModalOpen: boolean;
+  selectedChatAvatarName: string;
+  isChatAvatarFileSelected: boolean;
   modalError: string;
 };
 
@@ -83,6 +86,8 @@ export default class ChatsPage extends Block<ChatsPageProps> {
 
   private allChats: ChatListItem[] = [];
 
+  private selectedChatAvatarFile: File | null = null;
+
   private searchTimer: ReturnType<typeof setTimeout> | null = null;
 
   private searchInputValue = '';
@@ -102,6 +107,9 @@ export default class ChatsPage extends Block<ChatsPageProps> {
       isAddUserModalOpen: false,
       isRemoveUserModalOpen: false,
       isCreateChatModalOpen: false,
+      isChatAvatarModalOpen: false,
+      selectedChatAvatarName: '',
+      isChatAvatarFileSelected: false,
       modalError: '',
     });
   }
@@ -125,10 +133,14 @@ export default class ChatsPage extends Block<ChatsPageProps> {
   }
 
   private closeUserModal() {
+    this.selectedChatAvatarFile = null;
     this.setProps({
       isAddUserModalOpen: false,
       isRemoveUserModalOpen: false,
       isCreateChatModalOpen: false,
+      isChatAvatarModalOpen: false,
+      selectedChatAvatarName: '',
+      isChatAvatarFileSelected: false,
       modalError: '',
     });
   }
@@ -138,7 +150,22 @@ export default class ChatsPage extends Block<ChatsPageProps> {
       chatMenuOpen: false,
       isAddUserModalOpen: false,
       isRemoveUserModalOpen: false,
+      isChatAvatarModalOpen: false,
       isCreateChatModalOpen: true,
+      modalError: '',
+    });
+  }
+
+  private openChatAvatarModal() {
+    this.selectedChatAvatarFile = null;
+    this.setProps({
+      chatMenuOpen: false,
+      isAddUserModalOpen: false,
+      isRemoveUserModalOpen: false,
+      isCreateChatModalOpen: false,
+      isChatAvatarModalOpen: true,
+      selectedChatAvatarName: '',
+      isChatAvatarFileSelected: false,
       modalError: '',
     });
   }
@@ -148,6 +175,7 @@ export default class ChatsPage extends Block<ChatsPageProps> {
       chatMenuOpen: false,
       isAddUserModalOpen: true,
       isRemoveUserModalOpen: false,
+      isChatAvatarModalOpen: false,
       modalError: '',
     });
   }
@@ -157,6 +185,7 @@ export default class ChatsPage extends Block<ChatsPageProps> {
       chatMenuOpen: false,
       isAddUserModalOpen: false,
       isRemoveUserModalOpen: true,
+      isChatAvatarModalOpen: false,
       modalError: '',
     });
   }
@@ -271,6 +300,9 @@ export default class ChatsPage extends Block<ChatsPageProps> {
       isAddUserModalOpen: false,
       isRemoveUserModalOpen: false,
       isCreateChatModalOpen: false,
+      isChatAvatarModalOpen: false,
+      selectedChatAvatarName: '',
+      isChatAvatarFileSelected: false,
       modalError: '',
     });
     this.clearSearch();
@@ -297,6 +329,26 @@ export default class ChatsPage extends Block<ChatsPageProps> {
     await ChatsAPI.addUsersToChat([userId], response.id);
     await this.loadChats();
     this.openChat(response.id, title);
+  }
+
+  private async handleUploadChatAvatar() {
+    const chatId = this.props.activeChatId;
+    if (!chatId) return;
+
+    if (!this.selectedChatAvatarFile) {
+      this.setProps({ modalError: 'Нужно выбрать файл' });
+      return;
+    }
+
+    try {
+      await ChatsAPI.uploadAvatar(chatId, this.selectedChatAvatarFile);
+      const title = this.props.activeChatTitle;
+      this.closeUserModal();
+      await this.loadChats();
+      this.openChat(chatId, title);
+    } catch (error) {
+      this.setProps({ modalError: getApiErrorReason(error) });
+    }
   }
 
   private getModalChatTitle(): string {
@@ -387,6 +439,22 @@ export default class ChatsPage extends Block<ChatsPageProps> {
   }
 
   protected events = {
+    change: (event: Event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement) || target.name !== 'chatAvatar') return;
+
+      const file = target.files?.[0];
+      if (!file) return;
+
+      this.selectedChatAvatarFile = file;
+      this.setProps({
+        selectedChatAvatarName: file.name,
+        isChatAvatarFileSelected: true,
+        modalError: '',
+      });
+      target.value = '';
+    },
+
     input: (event: Event) => {
       const target = event.target;
       if (!(target instanceof HTMLInputElement) || target.name !== 'search') return;
@@ -429,6 +497,22 @@ export default class ChatsPage extends Block<ChatsPageProps> {
 
       if (action === 'open-remove-user') {
         this.openRemoveUserModal();
+        return;
+      }
+
+      if (action === 'open-chat-avatar') {
+        this.openChatAvatarModal();
+        return;
+      }
+
+      if (action === 'pick-chat-avatar') {
+        const input = this.refs.chatAvatar;
+        if (input instanceof HTMLInputElement) input.click();
+        return;
+      }
+
+      if (action === 'upload-chat-avatar') {
+        void this.handleUploadChatAvatar();
         return;
       }
 
