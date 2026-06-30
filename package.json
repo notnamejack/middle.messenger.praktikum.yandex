@@ -17,19 +17,25 @@
     "lint:types": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prepare": "husky",    
+    "prepare": "husky",
     "audit": "npm audit --audit-level=moderate",
     "audit:fix": "npm audit fix"
   },
   "lint-staged": {
-    "*.{ts,tsx}": ["eslint --fix"],
-    "*.scss": ["stylelint --fix"]
+    "*.{ts,tsx}": [
+      "eslint --fix"
+    ],
+    "*.scss": [
+      "stylelint --fix"
+    ]
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
     "eslint": "^8.57.0",
     "husky": "^9.1.7",
+    "jest": "^30.4.2",
     "jsdom": "^29.1.1",
     "lint-staged": "^16.4.0",
     "postcss-scss": "^4.0.9",
