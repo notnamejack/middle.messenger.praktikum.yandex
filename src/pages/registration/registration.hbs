@@ -1,0 +1,55 @@
+<main class="container-modal">
+    <div class="card big">
+        <p class="card-title">Регистрация</p>
+        <form action="/" class="form">
+            <div class="form-body">
+                {{{ Input
+                    id="email"
+                    name="email"
+                    label="Почта"
+                    type="email"
+                }}}
+                {{{ Input
+                    id="login"
+                    name="login"
+                    label="Логин"
+                    type="text"
+                }}}
+                {{{ Input
+                    id="first_name"
+                    name="first_name"
+                    label="Имя"
+                    type="text"
+                }}}
+                {{{ Input
+                    id="second_name"
+                    name="second_name"
+                    label="Фамилия"
+                    type="text"
+                }}}
+                {{{ Input
+                    id="phone"
+                    name="phone"
+                    label="Телефон"
+                    type="tel"
+                }}}
+                {{{ Input
+                    id="password"
+                    name="password"
+                    label="Пароль"
+                    type="password"
+                }}}
+                {{{ Input
+                    id="password_repeat"
+                    name="password_repeat"
+                    label="Пароль (ещё раз)"
+                    type="password"
+                }}}
+            </div>
+            <div class="form-footer">
+                <button type="submit" class="btn">Зарегистрироваться</button>
+                <a href="/" class="sing-in" data-link>Войти</a>
+            </div>
+        </form>
+    </div>
+</main>
