@@ -2,10 +2,12 @@ import { AuthAPI } from '../../api/auth';
 import { ChatsAPI } from '../../api/chats';
 import { UserAPI } from '../../api/user';
 import Block, { type BlockOwnProps } from '../../core/block';
-import type { ChatResponse, UserResponse } from '../../types/api';
+import type { ChatResponse, MessageResponse, MessageView, UserResponse } from '../../types/api';
 import { getAvatarUrl } from '../../utils/avatar';
 import { getApiErrorReason } from '../../utils/api-error';
 import template from './chats.hbs?raw';
+import { ChatWebSocket } from '../../core/ChatWebSocket';
+import { validateField } from '../../utils/validation';
 
 type ChatListItem = {
   id: number;
@@ -62,6 +64,9 @@ type ChatsPageProps = BlockOwnProps & {
   selectedChatAvatarName: string;
   isChatAvatarFileSelected: boolean;
   modalError: string;
+  messages: MessageView[];
+  displayMessages: MessageView[];
+  hasMessages: boolean;
 };
 
 function formatTime(iso: string): string {
@@ -111,6 +116,10 @@ export default class ChatsPage extends Block<ChatsPageProps> {
   private searchInputValue = '';
 
   private searchCursorPos: number | null = null;
+  
+  private chatWs = new ChatWebSocket();
+
+  private messages: MessageView[] = [];
 
   constructor() {
     super({
@@ -131,7 +140,34 @@ export default class ChatsPage extends Block<ChatsPageProps> {
       selectedChatAvatarName: '',
       isChatAvatarFileSelected: false,
       modalError: '',
+      messages: [],
+      displayMessages: [],
+      hasMessages: false,
     });
+  }
+
+  public setProps(props: Partial<ChatsPageProps>) {
+    const msgs = props.messages ?? this.messages;
+    super.setProps({
+      ...props,
+      displayMessages: [...msgs].reverse(),
+      hasMessages: props.hasMessages ?? msgs.length > 0,
+    });
+    if (this.props.activeChatId && msgs.length > 0) {
+      requestAnimationFrame(() => this.scrollToLatest());
+    }
+  }
+
+  private patchProps(props: Partial<ChatsPageProps>) {
+    const msgs = props.messages ?? this.messages;
+    this.props = {
+      ...this.props,
+      ...props,
+      displayMessages: [...msgs].reverse(),
+      hasMessages: props.hasMessages ?? msgs.length > 0,
+      __children: [],
+      __refs: {},
+    } as ChatsPageProps;
   }
 
   protected template = template;
@@ -331,10 +367,13 @@ export default class ChatsPage extends Block<ChatsPageProps> {
       isDeleteChatModalOpen: false,
       selectedChatAvatarName: '',
       isChatAvatarFileSelected: false,
-      modalError: '',
+      modalError: '',      
+      messages: [],
+      hasMessages: false,
     });
     this.clearSearch();
     void this.loadParticipants(id);
+    void this.connectToChat(id);
   }
 
   private async loadParticipants(chatId: number) {
@@ -474,14 +513,18 @@ export default class ChatsPage extends Block<ChatsPageProps> {
     if (!chatId) return;
 
     try {
-      await ChatsAPI.deleteChat(chatId);
+      await ChatsAPI.deleteChat(chatId);      
+      this.chatWs.close();
+      this.messages = [];
       this.closeDeleteChatModal();
       this.setProps({
         activeChatId: null,
         activeChatTitle: '',
         activeChatAvatarUrl: null,
         participantsOpen: false,
-        participants: [],
+        participants: [],        
+        messages: [],
+        hasMessages: false,
       });
       await this.loadChats();
     } catch (error) {
@@ -522,6 +565,14 @@ export default class ChatsPage extends Block<ChatsPageProps> {
           .then(() => this.syncSearchInput(target.value))
           .catch((error) => alert(getApiErrorReason(error)));
       }, 300);
+    },
+
+    keydown: (event: Event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement) || target.name !== 'message') return;
+      if (!(event instanceof KeyboardEvent) || event.key !== 'Enter') return;
+      event.preventDefault();
+      this.sendMessage();
     },
 
     click: (event: Event) => {
@@ -601,6 +652,11 @@ export default class ChatsPage extends Block<ChatsPageProps> {
         return;
       }
 
+      if (action === 'send-message') {
+        this.sendMessage();
+        return;
+      }
+
       if (target.classList.contains('chat-modal-overlay')) {
         if (this.props.isDeleteChatModalOpen) {
           this.closeDeleteChatModal();
@@ -673,4 +729,178 @@ export default class ChatsPage extends Block<ChatsPageProps> {
       })();
     },
   };
+
+  private toView(msg: MessageResponse): MessageView {
+    return {
+      id: String(msg.id ?? `${msg.time}-${msg.user_id}-${msg.content}`),
+      content: msg.content,
+      time: formatTime(msg.time),
+      isMine: Number(msg.user_id) === this.currentUserId,
+    };
+  }
+
+  private createMessageElement(view: MessageView): HTMLDivElement {
+    const el = document.createElement('div');
+    el.className = `message ${view.isMine ? 'my' : 'user'}`;
+    el.dataset.messageId = view.id;
+
+    const text = document.createElement('p');
+    text.className = 'text';
+    text.textContent = view.content;
+
+    const time = document.createElement('p');
+    time.className = 'time';
+    time.textContent = view.time;
+
+    el.append(text, time);
+    return el;
+  }
+
+  private scrollToLatest() {
+    const list = this.refs.messageList;
+    if (list instanceof HTMLElement) {
+      list.scrollTop = 0;
+    }
+  }
+
+  private updateActiveChatInSidebar(view: MessageView) {
+    const chatId = this.props.activeChatId;
+    if (!chatId) return;
+
+    const chat = this.allChats.find((item) => item.id === chatId);
+    if (chat) {
+      chat.text = view.content;
+      chat.time = view.time;
+      chat.prefix = view.isMine ? 'Вы: ' : undefined;
+    }
+
+    const item = this.element()?.querySelector(`[data-chat-id="${chatId}"]`);
+    if (!item) return;
+
+    const textEl = item.querySelector('.text-message');
+    const timeEl = item.querySelector('.metrika .time');
+    if (textEl) {
+      textEl.innerHTML = view.isMine
+        ? `<span>Вы: </span>${view.content}`
+        : view.content;
+    }
+    if (timeEl) {
+      timeEl.textContent = view.time;
+    }
+  }
+
+  private focusMessageInput() {
+    requestAnimationFrame(() => {
+      const input = this.refs.message;
+      if (input instanceof HTMLInputElement) {
+        input.focus();
+      }
+    });
+  }
+
+  private appendMessage(msg: MessageResponse) {
+    const id = String(msg.id ?? `${msg.time}-${msg.user_id}-${msg.content}`);
+    if (this.messages.some((m) => m.id === id)) return;
+
+    const isMine = Number(msg.user_id) === this.currentUserId;
+    const view = { ...this.toView(msg), id };
+    const isFirst = this.messages.length === 0;
+
+    this.messages.push(view);
+    this.patchProps({ messages: [...this.messages] });
+
+    if (isFirst) {
+      this.setProps({ messages: [...this.messages], hasMessages: true });
+    } else {
+      const list = this.refs.messageList;
+      if (list instanceof HTMLElement) {
+        list.insertBefore(this.createMessageElement(view), list.firstChild);
+      }
+    }
+
+    this.updateActiveChatInSidebar(view);
+
+    if (isMine) {
+      this.focusMessageInput();
+    }
+  }
+
+  private async loadHistory() {
+    const chatId = this.props.activeChatId;
+    if (!chatId) return;
+
+    const collected: MessageResponse[] = [];
+    let offset = '0';
+    let batch: MessageResponse[];
+
+    do {
+      batch = await this.chatWs.getOld(offset);
+      if (!batch.length) break;
+
+      collected.push(...batch);
+
+      if (batch.length < 20) break;
+
+      const lastId = batch[batch.length - 1]?.id;
+      if (lastId == null) break;
+      offset = String(lastId);
+
+      if (this.props.activeChatId !== chatId) return;
+    } while (batch.length >= 20);
+
+    this.messages = collected.reverse().map((m) => this.toView(m));
+
+    this.setProps({
+      messages: this.messages,
+      hasMessages: this.messages.length > 0,
+    });
+  }
+
+  private async connectToChat(chatId: number) {
+    this.chatWs.close();
+    this.messages = [];
+
+    try {
+      if (!this.currentUserId) {
+        const user = await AuthAPI.getUser();
+        this.currentUserId = user.id;
+      }
+
+      const { token } = await ChatsAPI.getChatToken(chatId);
+
+      this.chatWs.connect(chatId, this.currentUserId, token, {
+        onOpen: () => {
+          void this.loadHistory();
+        },
+        onMessage: (msg) => {
+          this.appendMessage(msg);
+        },
+        onMessages: () => {},
+      });
+    } catch (error) {
+      alert(getApiErrorReason(error));
+    }
+  }
+
+  private sendMessage() {
+    const input = this.refs.message;
+    if (!(input instanceof HTMLInputElement)) return;
+    if (!this.props.activeChatId) return;
+
+    if (!validateField(input)) return;
+
+    const text = input.value.trim();
+    this.chatWs.sendMessage(text);
+    input.value = '';
+    this.focusMessageInput();
+  }
+  protected componentWillUnmount() {
+    if (this.searchTimer) clearTimeout(this.searchTimer);
+  }
+
+  public destroy() {
+    this.chatWs.close();
+    if (this.searchTimer) clearTimeout(this.searchTimer);
+    super.destroy();
+  }
 }
