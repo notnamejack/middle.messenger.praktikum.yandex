@@ -79,6 +79,25 @@ npm i -D sass vite-plugin-handlebars
 - Обработка `popstate` и кликов по `a[data-link]`
 - Уничтожение предыдущей страницы при переходе (`destroy()`)
 
+## Спринт 4 — что реализовано
+
+### WebSocket
+- `ChatWebSocket` — real-time сообщения, ping/pong, подгрузка истории (`get old`)
+- Отправка и получение сообщений на странице чатов
+
+### Тестирование
+- Vitest + jsdom
+- Тесты: `HTTPTransport`, роутер (`app/`), `Input`, `InputHorizontal`, `ChatItem`
+- `escapeHtml`, утилиты сообщений
+
+### Безопасность
+- Экранирование пользовательского контента (`escapeHtml`, `textContent`)
+- ESLint запрещает небезопасный `innerHTML` (исключения: `block.ts`, тесты)
+
+### Инфраструктура
+- Husky pre-commit: lint-staged → `lint:types` → `test`
+- Аудит зависимостей: `npm run audit`, `npm run audit:fix`
+
 ### Стек
 - TypeScript
 - Vite
@@ -88,8 +107,9 @@ npm i -D sass vite-plugin-handlebars
 ### Структура проекта
 ```bash
 src/
-  app/          # маршрутизация, renderPage/navigate
-  core/         # Block, register-component
+  app/          # маршрутизация, renderPage/navigate  
+  api/          # HTTP API (auth, user, chats)
+  core/         # Block, HTTPTransport, ChatWebSocket
   components/   # переиспользуемые UI-компоненты
   pages/        # страницы приложения
   utils/        # валидация и утилиты
@@ -106,6 +126,10 @@ npm run lint:fix    # автофикс eslint/stylelint
 npm run lint:eslint
 npm run lint:style
 npm run lint:types
+npm test              # unit-тесты (vitest run)
+npm run test:watch    # тесты в watch-режиме
+npm run audit         # аудит уязвимостей
+npm run audit:fix     # автофикс безопасных патчей
 
 ```
 

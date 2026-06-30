@@ -14,12 +14,24 @@
     "lint:fix": "eslint src vite.config.ts --fix && stylelint \"src/**/*.scss\" --fix",
     "lint:eslint": "eslint src vite.config.ts",
     "lint:style": "stylelint \"src/**/*.scss\"",
-    "lint:types": "tsc --noEmit"
+    "lint:types": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepare": "husky",    
+    "audit": "npm audit --audit-level=moderate",
+    "audit:fix": "npm audit fix"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": ["eslint --fix"],
+    "*.scss": ["stylelint --fix"]
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
     "eslint": "^8.57.0",
+    "husky": "^9.1.7",
+    "jsdom": "^29.1.1",
+    "lint-staged": "^16.4.0",
     "postcss-scss": "^4.0.9",
     "sass": "^1.99.0",
     "stylelint": "^17.11.1",
@@ -27,7 +39,8 @@
     "stylelint-scss": "^7.1.1",
     "typescript": "~6.0.2",
     "vite": "^8.0.10",
-    "vite-plugin-handlebars": "^2.0.3"
+    "vite-plugin-handlebars": "^2.0.3",
+    "vitest": "^4.1.9"
   },
   "dependencies": {
     "handlebars": "^4.7.9"

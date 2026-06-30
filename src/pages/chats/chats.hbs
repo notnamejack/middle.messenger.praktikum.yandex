@@ -201,20 +201,19 @@
                     </div>
 
                     <div class="body">
-                        <p class="desc body-empty">Нет сообщений. Напишите первое.</p>
-
-                        {{!-- sprint 4: WebSocket — лента сообщений
-                        <div class="message-list">
-                            <div class="message user">
-                                <p class="text">...</p>
-                                <p class="time">11:56</p>
+                        {{#unless hasMessages}}
+                            <p class="desc body-empty">Нет сообщений. Напишите первое.</p>
+                        {{/unless}}
+                        {{#if hasMessages}}
+                        <div class="message-list" ref="messageList">
+                            {{#each displayMessages}}
+                            <div class="message {{#if isMine}}my{{else}}user{{/if}}">
+                                <p class="text">{{content}}</p>
+                                <p class="time">{{time}}</p>
                             </div>
-                            <div class="message my">
-                                <p class="text">Круто!</p>
-                                <p class="time">12:00</p>
-                            </div>
+                            {{/each}}
                         </div>
-                        --}}
+                        {{/if}}
                     </div>
 
                     <div class="footer">
@@ -228,12 +227,13 @@
                         />
                         <button type="button" class="btn-file"></button>
                         <input
+                            ref="message"
                             type="text"
                             class="input-message"
                             placeholder="Сообщение"
                             name="message"
                         />
-                        <button type="button" class="btn-send"></button>
+                        <button type="button" class="btn-send" data-action="send-message"></button>
                     </div>
                 </div>
             {{/if}}

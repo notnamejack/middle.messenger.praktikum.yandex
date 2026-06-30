@@ -88,6 +88,37 @@ export type CreateChatResponse = {
   id: number;
 };
 
+export type MessageFile = {
+  id: number;
+  user_id: number;
+  path: string;
+  filename: string;
+  content_type: string;
+  content_size: number;
+  upload_date: string;
+};
+
+export type ChatTokenResponse = {
+  token: string;
+};
+
+export type MessageResponse = {
+  id?: string;
+  chat_id?: number;
+  time: string;
+  type: 'message' | 'file' | 'sticker';
+  user_id: string;
+  content: string;
+  file?: MessageFile;
+};
+
+export type MessageView = {
+  id: string;
+  content: string;
+  time: string;
+  isMine: boolean;
+};
+
 export type ChatsResponse = ChatResponse[];
 
 export type ChatUsersResponse = UserResponse[];
