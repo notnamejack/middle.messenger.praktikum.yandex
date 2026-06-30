@@ -26,7 +26,7 @@ export async function renderPage(pathname: string = window.location.pathname) {
 
   const Page = ROUTES[pathname] ?? NotFoundPage;
 
-  root.innerHTML = '';
+  root.replaceChildren();
   if(activePage) {
     activePage.destroy();
   }

@@ -8,6 +8,7 @@ import { getApiErrorReason } from '../../utils/api-error';
 import template from './chats.hbs?raw';
 import { ChatWebSocket } from '../../core/ChatWebSocket';
 import { validateField } from '../../utils/validation';
+import { setSidebarMessageText } from '../../utils/message-dom';
 
 type ChatListItem = {
   id: number;
@@ -779,10 +780,12 @@ export default class ChatsPage extends Block<ChatsPageProps> {
 
     const textEl = item.querySelector('.text-message');
     const timeEl = item.querySelector('.metrika .time');
-    if (textEl) {
-      textEl.innerHTML = view.isMine
-        ? `<span>Вы: </span>${view.content}`
-        : view.content;
+    if (textEl instanceof HTMLElement) {
+      setSidebarMessageText(
+        textEl,
+        view.content,
+        view.isMine ? 'Вы: ' : undefined,
+      );
     }
     if (timeEl) {
       timeEl.textContent = view.time;

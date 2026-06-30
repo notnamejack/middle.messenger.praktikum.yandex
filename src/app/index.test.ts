@@ -28,7 +28,10 @@ vi.mock('./routes', () => ({
 
 describe('app router', () => {
     beforeEach(() => {
-        document.body.innerHTML = '<div id="app"></div>';
+        document.body.replaceChildren();
+        const app = document.createElement('div');
+        app.id = 'app';
+        document.body.append(app);
         window.history.replaceState({}, '', '/');
         getUser.mockReset();
         destroySpy.mockReset();
