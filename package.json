@@ -17,7 +17,9 @@
     "lint:types": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prepare": "husky"
+    "prepare": "husky",    
+    "audit": "npm audit --audit-level=moderate",
+    "audit:fix": "npm audit fix"
   },
   "lint-staged": {
     "*.{ts,tsx}": ["eslint --fix"],
